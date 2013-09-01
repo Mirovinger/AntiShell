@@ -71,7 +71,7 @@
 
 	</section> 	
 	<p>Установщик подготовил: <a href="http://pafnuty.name/" target="_blank">ПафНутиЙ</a></p>
-	<p>Код скрипта подготовил: <a href="http://sndev.pro/" target="_blank">Sander</a></p>
+	<p>Код скрипта подготовил: <a href="http://sandev.pro/" target="_blank">Sander</a></p>
 </body>
 </html>
 
@@ -89,7 +89,6 @@
 
 			// Определяем переменные
 
-		    // Текст скрипта ZEOS-антивирус (взят оригинальные код, пропущен через http://beta.phpformatter.com/ и подставлены переменные из формы. а так же добавлена переменная для email отправителя.)
 			$as = file_get_contents('https://raw.github.com/pafnuty/AntiShell/master/src/source.php');
 			$as = iconv("utf-8", "windows-1251//IGNORE", $as);
 
@@ -127,7 +126,6 @@
 			$as = str_replace($as_config_array, $as_config_values, $as);
 
 			$script_filename = $_POST['script_filename'];
-			echo "<pre class='dle-pre'>"; print_r($docroot.$script_filename); echo "</pre>";
 			
 			$as_file = fopen($docroot.$script_filename, "w");
 			fwrite($as_file, $as);
@@ -172,7 +170,7 @@
 			}
 
 			$output .= <<<HTML
-				<p class="ta-center">Текущая версия скрипта: <b>{$version['id']}</b> от {$version['date']}</p>
+			<p class="ta-center">Текущая версия скрипта: <b>{$version['id']}</b> от {$version['date']}</p>
 			<div class="descr">
 				<form method="POST">            
 					<input type="hidden" name="install" value="1">

@@ -3,7 +3,7 @@
  * =============================================================================
  * AntiShell - Скрипт для котроля за изменениями в файлах на сайте.
  * =============================================================================
- * Автор: Sander 
+ * Автор кода: Sander 
  * URL: http://sandev.pro/
  * ICQ: 404-037-556 
  * email: olalod@mail.ru
@@ -66,13 +66,13 @@ $config             = array(
 );
 
 if(!$config['on']) die("Wat?");
-$config['ext']      = str2array($config['ext']);
-$config['skipfile'] = str2array($config['skipfile']);
-$config['skipdir']  = str2array($config['skipdir']);
+$config['ext']		= str2array($config['ext']);
+$config['skipfile']	= str2array($config['skipfile']);
+$config['skipdir']	= str2array($config['skipdir']);
 
 //////////////////// ДАЛЬШЕ ТРОГАТЬ НЕ НУЖНО //////////////////////
 
-$time_start = microtime(true);
+$time_start  = microtime(true);
 
 /////////////////////// Определение путей /////////////////////////
 $root        = explode($_SERVER['HTTP_HOST'], dirname(__FILE__));
