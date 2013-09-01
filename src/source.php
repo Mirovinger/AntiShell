@@ -13,19 +13,13 @@
  * ICQ: 817233
  * email: pafnuty10@gmail.com
  * =============================================================================
- * Версия: 1.0.0 (27.08.2013)
+ * Версия: 1.0.1 (01.09.2013)
  * =============================================================================
  */ 
 
-if (!defined('E_DEPRECATED')) {
-	@error_reporting(E_ALL ^ E_WARNING ^ E_NOTICE);
-	@ini_set('error_reporting', E_ALL ^ E_WARNING ^ E_NOTICE);
-} else {
-	@error_reporting(E_ALL ^ E_WARNING ^ E_DEPRECATED ^ E_NOTICE);
-	@ini_set('error_reporting', E_ALL ^ E_WARNING ^ E_DEPRECATED ^ E_NOTICE);
-}
-@ini_set('display_errors', true);
-@ini_set('html_errors', false);
+@error_reporting ( E_ALL ^ E_WARNING ^ E_NOTICE );
+@ini_set ( 'error_reporting', E_ALL ^ E_WARNING ^ E_NOTICE );
+@ini_set ( 'display_errors', true );
 header('Content-type: text/html; charset=windows-1251');
 
 //////////////////////////// Настройки ////////////////////////////
@@ -73,6 +67,8 @@ $config             = array(
 	// Можно скопировать файл себе на хостинг и вставить сылку на него сюда.
 	'icon_url' => 'https://raw.github.com/pafnuty/AntiShell/master/img/as_sprite.png'
 );
+
+if(!$config['on']) die("Wat?");
 $config['ext']      = str2array($config['ext']);
 $config['skipfile'] = str2array($config['skipfile']);
 $config['skipdir']  = str2array($config['skipdir']);
@@ -273,8 +269,8 @@ if (file_exists(ROOT_DIR . $config['scanfile'])) {
 		$__wd1			= wordSpan($total_files, 'фай|л|ла|лов');
 
 		$logs = <<<HTML
-<body style="background-color:#ecf0f1; max-width: 800px; margin: 0 auto;">
-	<h1 style="font:normal 22px 'Trebuchet MS',Arial,sans-serif;color:#2980b9;margin:40px 10px 10px;text-align: center;">{$config['sitename']} - Сканирование завершено</h1>
+<body style="background-color:#ecf0f1; max-width: 800px; margin: 0 auto;padding:0;">
+	<h1 style="font:normal 22px 'Trebuchet MS',Arial,sans-serif;color:#2980b9;padding:40px 10px 10px;text-align: center;">{$config['sitename']} - Сканирование завершено</h1>
 	<div style="background-color:#ecf0f1;font:normal 16px 'Trebuchet MS',Arial,sans-serif;color:#7f8c8d;margin:0;padding:5px 5px 35px 5px;">
 		<ul style="list-style:none;margin:0;padding:0;margin-bottom:15px;">
 			{$logs}
@@ -292,7 +288,7 @@ if (file_exists(ROOT_DIR . $config['scanfile'])) {
 	</div>
 </body>
 HTML;
-		$logs = str_replace("<p>","<p style='color:#34495e;margin:0;padding:0 40px;'>",$logs);
+		$logs = str_replace("<p>","<p style='color:#34495e;margin:0;padding:0 38px;'>",$logs);
 		$logs = str_replace("<b>","<b style='color:#2c3e50;'>",$logs);
 
 		mailfromsite($logs, $config['sitename'], $config['from_email'], $config['email']);
