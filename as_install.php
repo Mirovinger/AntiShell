@@ -6,7 +6,7 @@
 
 <head>
 	<meta charset="windows-1251">
-	<title>Установка ZEOS+</title>
+	<title>Установка AntiShell</title>
 	<meta name="viewport" content="width=device-width">
 	<link href="http://fonts.googleapis.com/css?family=Ubuntu+Condensed&subset=latin,cyrillic" rel="stylesheet">
 	<style>
@@ -55,416 +55,83 @@
 </head>
 <body>
 	<header>
-		<h1 class="ta-center"><big class="red">ZEOS+</big> <br><span class="blue">Мастер настройки и установки скрипта "ZEOS антивирус"</span></h1>
+		<h1 class="ta-center"><big class="red">AntiShell</big></small> <br><span class="blue">Мастер установки скрипта для контроля за cоcтоянием файлов Вашего сайта</span></h1>
 		<hr>
 	</header>
 	<section>  
-		<h2 class="gray ta-center">Написан специально для быстрой установки антивируса на сайт без лишних заморочек.</h2>
+		<h2 class="gray ta-center">Написан специально для быстрой установки скрипта на сайт без лишних заморочек.</h2>
+		<p class="ta-center">
+			<a href="https://github.com/pafnuty/AntiShell" target="_blank" class="btn">Репозиторий на GitHub</a>
+			<!-- <a href="" class="btn">Описание скрипта</a> -->
+		</p>
 		<?php
-			$output = zeos_plus_installer();
+			$output = anti_shell_installer();
 			echo $output;
 		?>
 
 	</section> 	
 	<p>Установщик подготовил: <a href="http://pafnuty.name/" target="_blank">ПафНутиЙ</a></p>
-	<p>Сайт антивируса: <a href="http://zeos.in/" target="_blank">zeos.in</a></p>
-	<p>Единственная статья с описанием: <a href="http://dle-news.ru/modules/1058-zeos-antivirus.html" target="_blank">dle-news.ru</a></p>
-	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
-	<script>
-		function generatePassword() {
-			var length = 8,
-				charset = "abcdefghijklnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789",
-				retVal = "";
-			for (var i = 0, n = charset.length; i < length; ++i) {
-				retVal += charset.charAt(Math.floor(Math.random() * n));
-			}
-			return retVal;
-		}
-		jQuery(document).ready(function($) {
-			$('input[name="password"]').val(generatePassword());
-			$('#more_pass').click(function(event) {
-				$('input[name="password"]').val(generatePassword());
-			});
-		});
-	</script>
+	<p>Код скрипта подготовил: <a href="http://sndev.pro/" target="_blank">Sander</a></p>
 </body>
 </html>
 
 <?php 
-	function zeos_plus_installer() {
-
-		// Стандартный текст
+	function anti_shell_installer() {
+		$docroot = $_SERVER["DOCUMENT_ROOT"];
 		$output = '';
-		
+		$ver = file_get_contents('https://raw.github.com/pafnuty/AntiShell/master/verdion_id.json');
+		if ($ver) {
+			$version = json_decode($ver, true);
+		} 
+
 		// Если через $_POST передаётся параметр install, производим инсталляцию, согласно параметрам
 		if(!empty($_POST['install'])) {
 
 			// Определяем переменные
-			$docroot = $_POST['docroot'];
-		    $script_filename = $_POST['script_filename'];
-		    $sitename = $_POST['sitename'];
-		    $path = $_POST['path'];
-		    $snapfile = $_POST['snapfile'];
-		    $ext = $_POST['ext'];
-		    $exclfiles = $_POST['exclfiles'];
-		    $excldirs = $_POST['excldirs'];
-		    $yourmail = $_POST['yourmail'];
-		    $from = ($_POST['from']) ? $_POST['from'] : "" ;
-		    $password = $_POST['password'];
-		    $mt = $_POST['mt'];
 
 		    // Текст скрипта ZEOS-антивирус (взят оригинальные код, пропущен через http://beta.phpformatter.com/ и подставлены переменные из формы. а так же добавлена переменная для email отправителя.)
-			$zeos = '<?php
-				/*
-					=====================================================
-					ZEOS ANTIVIRUS - Антивирус для сайта
-					-----------------------------------------------------
-					Сайт: http://zeos.in/
-					-----------------------------------------------------
-					По всем вопросам обращайтесь на: zeos.ua@gmail.com
-					=====================================================
-					Доработка скрипта: ПафНутиЙ (http://pafnuty.name/)
-					-----------------------------------------------------
-				*/
+			$as = file_get_contents('https://raw.github.com/pafnuty/AntiShell/master/src/source.php');
+			$as = iconv("utf-8", "windows-1251//IGNORE", $as);
 
-				////////////////////////////////////////////////////////////////////////////////
+			if (!$as) {
+				die('Невозможно получить доступ к установочному файлу по адресу: https://raw.github.com/pafnuty/AntiShell/master/src/source.php');
+			}
+			
 
-				// 0 - Выключить, 1 - Включить.
-				$mode            = 1;
+			$as_config_array = array(
+					'[version_id]',
+					'[version_date]',
+					'[sitename]',
+					'[path]'	,
+					'[scanfile]',
+					'[ext]'		,
+					'[skipfile]',
+					'[skipdir]'	,
+					'[email]',
+					'[from_email]',
+					'[icon_url]'
+				);
+			$as_config_values = array(
+				$version['id'],
+				$version['date'],
+				$_POST['sitename'],
+				($_POST['path']) ? $_POST['path'] : "",
+				$_POST['scanfile'],
+				($_POST['ext']) ? $_POST['ext'] : "",
+				($_POST['skipfile']) ? $_POST['skipfile'] : "",
+				($_POST['skipdir']) ? $_POST['skipdir'] : "",
+				$_POST['yourmail'],
+				($_POST['from']) ? $_POST['from'] : "",
+				$_POST['icon_url']
+				);
+			$as = str_replace($as_config_array, $as_config_values, $as);
 
-				// Путь к корню сайта.
-				$docroot         = "'.$docroot.'";
-
-				// Путь к файлу антивируса от корня сайта.
-				$script_filename = "'.$script_filename.'";
-
-				// Название сайта.
-				$sitename        = "'.$sitename.'";
-
-				// Начальный путь проверки. "/" - корень сайта. Например, нам надо сканировать не все, что есть на сервере, а только: http://zeos.in/forum/
-				// Для этого указываем так: $path = "/forum";
-				$path            = "'.$path.'";
-
-				// Название файла со снимком системы. Путь от корня сайта. Директория должна существовать и иметь права CHMOD - 777
-				// В целях безопасности мы рекомендуем переименовать файл на любое другое название с любым расширением и прописать путь в какую-то глубокую, отдаленную от корня папку.
-				$snapfile        = "'.$snapfile.'";
-
-				// Список расширений файлов, которые необходимо проверять. "*" или "" - означает любые расширения. Расширения указывать без точек и через символ: |
-				// Например, $ext = "php|cgi|pl|perl|php3|php4|php5|php6|tpl|js|htaccess|htm|html|css|swf|txt|db|lng";
-				$ext             = "'.$ext.'";
-
-				// Список расширений файлов, которые не надо учитывать при проверке. Расширения указывать без точек и через символ: |
-				// А также можно указывать имена файлов, которые тоже не надо учитывать. Например, $exclfiles = "index.php|jpg"; - здесь не будут учитываться файлы с именами "index.php" и все файлы с расширением JPG
-				$exclfiles       = "'.$exclfiles.'";
-
-				// Список папок, которые не надо проверять. Путь указывается относительно значения переменной "$path". Разделитель папок символ: |
-				// Например, $excldirs = "/folder|/files/web"; - здесь папки: http://zeos.in/folder и http://zeos.in/files/web сканер будет пропускать.
-				$excldirs        = "'.$excldirs.'";
-
-				// Укажите адрес электронной почты. Можно указать несколько через разделитель: |
-				$yourmail        = "'.$yourmail.'";
-				
-				// Укажите адрес с которого будет отправлено письмо. Если оставить пустым - будет использован первый адрес из переменной $yourmail.
-				$from            = "'.$from.'";
-
-				// Пароль для создания снимка системы. Если Вы хотите запретить запуск антивируса по ссылке "http://Ваш_домен/путь_к_файлу_антивируса/название_файла_антивируса.php?mode=2&pass=1234567" то закомментируйте строчку, поставив перед ней два символа: //
-				$password        = "'.$password.'";
-
-				// Лимит времени на выполнение скрипта.
-				$mt              = '.$mt.';
-
-				////////////////////////////////////////////////////////////////////////////////
-				////////////////////// НЕ ТРОГАЙТЕ ЕСЛИ НЕ ШАРИТЕ!!! ///////////////////////////
-				////////////////////////////////////////////////////////////////////////////////
-				@error_reporting(0); // 2047 или E_ALL - вывод всех возможных ошибок.
-				if ($mode == 0)
-					die();
-				$docroot         = checkpath(trim($docroot));
-				$script_filename = $docroot . checkpath(trim($script_filename));
-				$allfiles        = 0;
-				$timelimit       = "";
-				if (!isset($mt) || trim($mt) == "")
-					$mt = 0;
-				if ($mt != 0)
-					$mt = $mt - 2;
-				function dirListing($dir)
-				{
-					global $exclfiles, $excldirs, $ext, $snapfile, $mt, $st, $timelimit, $allfiles, $docroot, $script_filename;
-					$exclfiles = midtrim($exclfiles);
-					$excldirs  = midtrim($excldirs);
-					$excldirs  = checkpath($excldirs);
-					$ext       = midtrim($ext);
-					$sfile     = explode("/", $snapfile);
-					$sfile     = $sfile[count($sfile) - 1];
-					if ($handle = opendir($dir)) {
-						while (false !== ($file = readdir($handle))) {
-							if ($file != "." && $file != "..") {
-								if (is_dir($dir . "/" . $file)) {
-									if (!preg_match("#" . $excldirs . "#i", $dir . "/" . $file) || $excldirs == "")
-										@$snap .= dirListing($dir . "/" . $file);
-								} //is_dir($dir . "/" . $file)
-								else {
-									if ((!preg_match("#" . $exclfiles . "#i", $file) || $exclfiles == "") && $file != $sfile && $file != $sfile . ".tmp" && $file != $sfile . ".pid" && $dir . "/" . $file != $script_filename) {
-										if (preg_match("#.*\.(" . $ext . ")#i", $file) || $ext == "") {
-											$allfiles++;
-											$s = filesize($dir . "/" . $file);
-											$t = filemtime($dir . "/" . $file);
-											$h = md5_file($dir . "/" . $file);
-											@$snap .= $dir . "/" . $file . "|" . $s . "|" . $t . "|" . $h . "\n";
-											$nt = date("U") - $st;
-											if ($nt > $mt && $mt != 0) {
-												$timelimit = "Некоторые файлы не были обработаны из-за превышения лимита времени (" . ($mt + 2) . " сек.)";
-												return $snap;
-											} //$nt > $mt && $mt != 0
-										} //preg_match("#.*\.(" . $ext . ")#i", $file) || $ext == ""
-									} //(!preg_match("#" . $exclfiles . "#i", $file) || $exclfiles == "") && $file != $sfile && $file != $sfile . ".tmp" && $file != $sfile . ".pid" && $dir . "/" . $file != $script_filename
-								}
-							} //$file != "." && $file != ".."
-						} //false !== ($file = readdir($handle))
-						closedir($handle);
-					} //$handle = opendir($dir)
-					return $snap;
-				}
-				function recSnap($snap, $istmp = false)
-				{
-					global $snapfile, $docroot;
-					$file = $docroot . $snapfile;
-					if ($istmp)
-						$file .= ".tmp";
-					$f = fopen($file, "w");
-					fputs($f, $snap);
-					fclose($f);
-				}
-				function checkSnap($snap)
-				{
-					global $snapfile, $docroot;
-					recSnap($snap, true);
-					$snap   = file_get_contents($docroot . $snapfile . ".tmp");
-					$fsnap  = file_get_contents($docroot . $snapfile);
-					$msnap  = md5($snap);
-					$mfsnap = md5($fsnap);
-					if ($msnap == $mfsnap) {
-						@unlink($docroot . $snapfile . ".tmp");
-						return 0;
-					} //$msnap == $mfsnap
-					else {
-						$snaparr  = explode("\n", $snap);
-						$fsnaparr = explode("\n", $fsnap);
-						$diff     = array_diff($fsnaparr, $snaparr);
-						$diff     = array_unique($diff);
-						$err      = "";
-						foreach ($diff as $e) {
-							$e = explode("|", $e);
-							$err .= $e[0] . "\n";
-						} //$diff as $e
-						$diff = array_diff($snaparr, $fsnaparr);
-						foreach ($diff as $s) {
-							$elems = explode("|", $s);
-							if (strstr($fsnap, $elems[0])) {
-								if (strstr($err, $elems[0] . "\n")) {
-									$err = str_replace($elems[0] . "\n", "Изменен файл: " . $elems[0] . "\n", $err);
-								} //strstr($err, $elems[0] . "\n")
-							} //strstr($fsnap, $elems[0])
-							elseif ($elems[0] != "") {
-								$err .= "Добавлен файл: " . $elems[0] . "\n";
-							} //$elems[0] != ""
-						} //$diff as $s
-						unset($diff);
-						$err    = explode("\n", trim($err));
-						$errors = "";
-						foreach ($err as $e) {
-							if (substr($e, 0, 1) != "И" && substr($e, 0, 1) != "Д" && $e != "")
-								$errors .= "Удален файл: " . $e . "\n";
-							else
-								$errors .= $e . "\n";
-						} //$err as $e
-						unset($err);
-						$errors = str_replace($docroot, "", $errors);
-						@unlink($docroot . $snapfile . ".tmp");
-						return $errors;
-					}
-				}
-				function mailfromsite($buffer, $subject, $mail, $from_mail)
-				{
-					global $path, $docroot, $sitename;
-					$sitepath   = str_replace($docroot, "", $path);
-					$from_email = $from_mail;
-					$email      = $mail;
-					if (trim($sitename) != "")
-						$from_email = mime_encode($sitename, "windows-1251") . " <" . $from_email . ">";
-					else
-						$from_email = "<" . $from_email . ">";
-					$buffer  = str_replace("\r", "", $buffer);
-					$headers = "From: " . $from_email . "\r\n";
-					$headers .= "X-Mailer: ZEOS ANTIVIRUS\r\n";
-					$headers .= "Content-Type: text/plain; charset=windows-1251\r\n";
-					$headers .= "Content-Transfer-Encoding: 8bit\r\n";
-					$headers .= "X-Priority: 1 (Highest)";
-					return mail($email, mime_encode($subject, \'windows-1251\'), $buffer, $headers);
-				}
-				function mime_encode($text, $charset)
-				{
-					return "=?" . $charset . "?B?" . base64_encode($text) . "?=";
-				}
-				function midtrim($str)
-				{
-					$str = trim($str);
-					while (strpos($str, "||"))
-						$str = str_replace("||", "|", $str);
-					if (substr($str, 0, 1) == "|")
-						$str = substr($str, 1, strlen($str) - 1);
-					if (substr($str, strlen($str) - 1, 1) == "|")
-						$str = substr($str, 0, strlen($str) - 1);
-					$str = explode("|", $str);
-					$cs  = count($str);
-					for ($i = 0; $i < $cs; $i++) {
-						$str[$i] = trim($str[$i]);
-					} //$i = 0; $i < $cs; $i++
-					$str = implode("|", $str);
-					return $str;
-				}
-				function checkpath($str)
-				{
-					$str = explode("|", $str);
-					$cs  = count($str);
-					for ($i = 0; $i < $cs; $i++) {
-						if (substr($str[$i], 0, 1) != "/")
-							$str[$i] = "/" . $str[$i];
-						if (substr($str[$i], strlen($str[$i]) - 1, 1) == "/")
-							$str[$i] = substr($str[$i], 0, strlen($str[$i]) - 1);
-					} //$i = 0; $i < $cs; $i++
-					$str = implode("|", $str);
-					return $str;
-				}
-				class Thread
-				{
-					function RegisterPID($pidFile)
-					{
-						if ($fp = fopen($pidFile, \'w\')) {
-							fwrite($fp, " ");
-							fclose($fp);
-							@chmod($pidFile, 0777);
-							return true;
-						} //$fp = fopen($pidFile, \'w\')
-						return false;
-					}
-					function CheckPID($pidFile)
-					{
-						if (file_exists($pidFile))
-							return true;
-						return false;
-					}
-					function KillPID($pidFile)
-					{
-						if (file_exists($pidFile))
-							@unlink($pidFile);
-					}
-				}
-				header(\'Content-type: text/html; charset=windows-1251\');
-				$thread = new Thread();
-				if (trim($snapfile) == "")
-					die("Название файла со снимком системы не может быть пустым!");
-				$snapfile = checkpath($snapfile);
-				if (file_exists($docroot . $snapfile . ".pid") && date("U") - filemtime($docroot . $snapfile . ".pid") > 86400)
-					@unlink($docroot . $snapfile . ".pid");
-				if ($mode != 0 && $mode != 1)
-					die(\'Неправильный режим. Установите переменную $mode в 0 или 1\');
-				if (isset($password)) {
-					if (isset($_GET[\'mode\'])) {
-						$vmode = $_GET[\'mode\'];
-						if ($vmode == 2) {
-							if (isset($_GET[\'pass\']))
-								$pass = $_GET[\'pass\'];
-							else
-								$pass = "";
-							if ($pass === $password)
-								$mode = 2;
-							else {
-								print("<font color=\"red\">Неверный пароль!</font><br /><form method=\"get\"><input type=\"hidden\" name=\"mode\" value=\"2\"/>Введите пароль: <input type=\"password\" name=\"pass\"/><input type=\"submit\" value=\"Отправить\"/></form>");
-								die();
-							}
-						} //$vmode == 2
-						else
-							die();
-					} //isset($_GET[\'mode\'])
-				} //isset($password)
-				if ($ext == "*")
-					$ext = "";
-				$path     = checkpath($path);
-				$spath    = explode("/", $snapfile);
-				$snappath = "";
-				$csn      = count($spath);
-				for ($i = 1; $i < $csn - 1; $i++) {
-					$snappath .= "/" . $spath[$i];
-				} //$i = 1; $i < $csn - 1; $i++
-				if (substr(sprintf(\'%o\', fileperms($docroot . $snappath)), -3) != 777 && $mode == 2)
-					die("У Вас нет прав для записи файла: " . $snapfile);
-				if ($thread->CheckPID($docroot . $snapfile . ".pid"))
-					die("Антивирус уже запущен и выполняется, дождитесь окончания работы.");
-				$thread->RegisterPID($docroot . $snapfile . ".pid");
-				switch ($mode) {
-					case \'1\':
-						if (!file_exists($docroot . $snapfile))
-							$res = "Файл со снимком системы не создан или удален. Запустите программу в режиме 2";
-						else {
-							$st   = date("U");
-							$path = $docroot . $path;
-							$snap = dirListing($path);
-							$res  = checkSnap($snap);
-							if ($timelimit != "")
-								$res .= $timelimit;
-							$et    = date("U");
-							$wtime = $et - $st;
-							if ($wtime == 0)
-								$wtime = 1;
-							if ($wtime > 60)
-								$wtime = floor($wtime / 60) . " мин. " . ($wtime % 60);
-						}
-						if ($res === 0)
-							echo "Различия не найдены | " . date("d.m.Y в H:i:s") . " | Время сканирования: " . $wtime . " сек. | Всего файлов: " . $allfiles;
-						else {
-							echo nl2br($res);
-							$yourmail = midtrim($yourmail);
-							$mails    = explode("|", $yourmail);
-							$f_m = ($from != "") ? $from : $mails[0];
-							foreach ($mails as $m) {
-								mailfromsite($res, "На сайте изменены файлы", $m, $f_m);
-							} //$mails as $m
-						}
-						$thread->KillPID($docroot . $snapfile . ".pid");
-						break;
-					case \'2\':
-						$st   = date("U");
-						$path = $docroot . $path;
-						$snap = dirListing($path);
-						recSnap($snap);
-						unset($snap);
-						$et    = date("U");
-						$wtime = $et - $st;
-						if ($wtime == 0)
-							$wtime = 1;
-						if ($wtime > 60)
-							$wtime = floor($wtime / 60) . " мин. " . ($wtime % 60);
-						$res = "Снимок системы записан в файл: " . $snapfile . " | " . date("d.m.Y в H:i:s") . " | Время сканирования: " . $wtime . " сек. | Всего файлов: " . $allfiles;
-						if ($timelimit != "")
-							$res .= "\n" . $timelimit;
-						echo nl2br($res);
-						$yourmail = midtrim($yourmail);
-						$mails    = explode("|", $yourmail);
-						$f_m = ($from != "") ? $from : $mails[0];
-						foreach ($mails as $m) {
-							mailfromsite($res, "Создан снимок системы", $m, $f_m);
-						} //$mails as $m
-						$thread->KillPID($docroot . $snapfile . ".pid");
-						break;
-				} //$mode
-				////////////////////////////////////////////////////////////////////////////////
-				?>
-			';
-			 
-			$zeos_file = fopen($docroot.$script_filename, "w");
-			fwrite($zeos_file, $zeos);
-			fclose($zeos_file);
+			$script_filename = $_POST['script_filename'];
+			echo "<pre class='dle-pre'>"; print_r($docroot.$script_filename); echo "</pre>";
+			
+			$as_file = fopen($docroot.$script_filename, "w");
+			fwrite($as_file, $as);
+			fclose($as_file);
 			chmod($docroot.$script_filename, 0755);
 
 			$bsn = basename($script_filename);
@@ -472,7 +139,7 @@
 			
 			if (!file_exists($docroot.$script_filename)) {
 				$output .= '<div class="descr">';
-				$output .= '<h2 class="red">Антивирус не установлен!</h2>' ;
+				$output .= '<h2 class="red">Скрипт не установлен!</h2>' ;
 				$output .= '<p>Скроее всего нет прав на запись файлов. Установите на папку <b class="red">'.$pth.'</b> права на запись: CHMOD 777. <br />И не забудьте вернуть обратно после успешной установки антивируса.</p>';
 				$output .= '<a class="btn" href="'.$_SERVER["PHP_SELF"].'" title="Вернуться обратно">Вернуться обратно</a>';
 				$output .= '</div>';
@@ -480,9 +147,8 @@
 
 				$output .= '<div class="descr">';
 				$output .= '<h2 class="red">Установка завершена! Обязательно удалите файл установщика!</h2>';
-				$output .= '<p>Теперь можно запускать создание снимка системы и донастраивать параметры в ручную. И не забудьте сохранить ссылки на запуск проверки и создание снимка системы, они вам понядобятся.</p>';
-				$output .= '<p><a href="http://'.$_SERVER['HTTP_HOST'].$script_filename.'?mode=2&pass='.$password.'" target="_blank" title="Будет запушена процедура создания снимка системы по адресу: http://'.$_SERVER['HTTP_HOST'].$script_filename.'?mode=2&pass='.$password.'" class="btn">1: Создать снимок системы</a>';
-				$output .= ' <a href="http://'.$_SERVER['HTTP_HOST'].$script_filename.'" target="_blank" title="Будет запущена проверка системы: http://'.$_SERVER['HTTP_HOST'].$script_filename.'" class="btn">2: Запустить проверку</a></p>';
+				$output .= '<p>Теперь можно запускать создание снимка системы. И не забудьте сохранить ссылку на запуск создания снимка системы, она вам понядобится.</p>';
+				$output .= ' <a href="http://'.$_SERVER['HTTP_HOST'].$script_filename.'" target="_blank" title="Будет запущена проверка системы: http://'.$_SERVER['HTTP_HOST'].$script_filename.'" class="btn">Запустить проверку</a></p>';
 				$output .= '<small class="red">Если вдруг размер снимка равен нулю или скрипт говорит, что добавлено 0 файлов, посавтьте на корневую папку сайта CMOD 755.</small></div>';
 				$output .= '<h2>Команда для выполнения через cron <small>(Скопируйте её и вставьте в планировщик)</small>:</h2>';
 				$output .= '<div class="descr">
@@ -496,10 +162,7 @@
 
 		// Если через $_POST ничего не передаётся, выводим форму для установки модуля
 		else {
-			// Вывод
-			$max_execution_time = ini_get('max_execution_time');
-			$docroot = $_SERVER["DOCUMENT_ROOT"];
-
+			
 			$site_title = 'Мой сайт';
 			$site_mail = 'noname@site.ru';
 			if (file_exists($docroot.'/engine/data/config.php')) {
@@ -509,30 +172,15 @@
 			}
 
 			$output .= <<<HTML
+				<p class="ta-center">Текущая версия скрипта: <b>{$version['id']}</b> от {$version['date']}</p>
 			<div class="descr">
 				<form method="POST">            
 					<input type="hidden" name="install" value="1">
-				
-					<div class="form-field clearfix">
-						<div class="lebel">Путь к корню сайта</div>
-						<div class="control">
-							<input type="text" name="docroot" value="$docroot">
-							<small class="gray">Определено автоматически. Меняйте это значение, если только знаете что делаете.</small>
-						</div>
-					</div>
-				
-					<div class="form-field clearfix">
-						<div class="lebel">Максимальное время выполнения скрипта (сек.)</div>
-						<div class="control">
-							<input type="text" name="mt" value="$max_execution_time">
-							<small class="gray">Определено автоматически, можно выставить меньше. Больше не ставьте, скрипт зависнет и положит сайт.</small>
-						</div>
-					</div>
 					
 					<div class="form-field clearfix">
-						<div class="lebel">Путь к файлу антивируса от корня сайта</div>
+						<div class="lebel">Путь к файлу скрипта от корня сайта</div>
 						<div class="control">
-							<input type="text" name="script_filename" value="/zeos.php">
+							<input type="text" name="script_filename" value="/antishell.php">
 							<small class="red">Обязательно изменить!</small>
 							<small class="gray">Лучше всего засунуть очень глубоко, чтобы никто не нашёл. Так же настоятельно рекомендуется сменить имя файла на что-то нечитаемое. <br>К примеру так: <code>/engine/classes/min/lib/MrClay/Cli/4589566Gdty.php</code></small>
 						</div>
@@ -541,7 +189,7 @@
 					<div class="form-field clearfix">
 						<div class="lebel">Имя сайта</div>
 						<div class="control">
-							<input type="text" name="sitename" value="Zeos: $site_title">
+							<input type="text" name="sitename" value="AntiShell: $site_title">
 							<small class="gray">Будет отображаться как тема письма.</small>
 						</div>
 					</div>
@@ -549,7 +197,7 @@
 					<div class="form-field clearfix">
 						<div class="lebel">Начальный путь проверки</div>
 						<div class="control">
-							<input type="text" name="path" value="/">
+							<input type="text" name="path" value="">
 							<small class="gray">По умолчанию - корень сайта.</small>
 						</div>
 					</div>
@@ -557,7 +205,7 @@
 					<div class="form-field clearfix">
 						<div class="lebel">Название файла со снимком системы</div>
 						<div class="control">
-							<input type="text" name="snapfile" value="/uploads/posts/snap.jpg">
+							<input type="text" name="scanfile" value="/uploads/posts/snap.jpg">
 							<small class="red">Обязательно изменить путь, имя и расширение файла!</small> <br>
 							<small class="gray">Папка, в которой будет создаваться снимок, должна иметь CHMOD 777</small>
 						</div>
@@ -566,24 +214,24 @@
 					<div class="form-field clearfix">
 						<div class="lebel">Расширения файлов, которые необходимо проверять</div>
 						<div class="control">
-							<input type="text" name="ext" value="*">
-							<small class="gray">По умолчанию все файлы. Расширения указывать без точек и через символ: <span class="red">|</span></small>
+							<input type="text" name="ext" value="">
+							<small class="gray">По умолчанию все файлы. Расширения указывать без точек, разделитель - запятая.</small>
 						</div>
 					</div>
 
 					<div class="form-field clearfix">
 						<div class="lebel">Расширения файлов, которые проверяться не будут</div>
 						<div class="control">
-							<input type="text" name="exclfiles" value="jpg|jpeg|gif|bmp|png|rar|zip|tmp|gz|xml|flv|exe|doc|pdf|avi|mp3|mp4|wmv|m4v|m4a|mov|3gp|f4v|3gp|mpg|mpeg">
-							<small class="gray">Указана оптимальная настройка. Расширения указывать без точек и через символ: <span class="red">|</span></small>
+							<input type="text" name="skipfile" value="jpg,jpeg,gif,bmp,png,rar,zip,tmp,gz,xml,flv,exe,txt,doc,pdf,avi,mp3,mp4,wmv,m4v,m4a,mov,3gp,f4v,3gp,mpg,mpeg">
+							<small class="gray">Указана оптимальная настройка. Расширения указывать без точек, разделитель - запятая.</small>
 						</div>
 					</div>
 
 					<div class="form-field clearfix">
 						<div class="lebel">Список папок, которые не надо проверять</div>
 						<div class="control">
-							<input type="text" name="excldirs" value="/engine/cache">
-							<small class="gray">Путь указывается относительно корня сайта. Разделитель папок символ: <span class="red">|</span></small>
+							<input type="text" name="skipdir" value="/engine/cache">
+							<small class="gray">Путь указывается относительно корня сайта. Разделитель папок символ - запятая.</small>
 						</div>
 					</div>
 
@@ -591,7 +239,7 @@
 						<div class="lebel">Email для уведомлений</div>
 						<div class="control">
 							<input type="text" name="yourmail" value="$site_mail">
-							<small class="gray">Можно указать несколько через разделитель: <span class="red">|</span></small>
+							<small class="gray">Адрес почты, на который будут приходить уведомлеия.</small>
 						</div>
 					</div>
 
@@ -599,24 +247,22 @@
 						<div class="lebel">Email отправителя</div>
 						<div class="control">
 							<input type="text" name="from" value="">
-							<small class="gray">С этого адреса будет отправлено письмо. Если оставить пустым - письмо будет отправлено с первого адреса для уведомлений (из поля выше)</small>
+							<small class="gray">С этого адреса будет отправлено письмо. Если оставить пустым - письмо будет отправлено с адреса для уведомлений (из поля выше)</small>
 						</div>
 					</div>
 
 					<div class="form-field clearfix">
-						<div class="lebel">Пароль для создания снимка системы</div>
+						<div class="lebel">Путь к иконкам-индикаторам</div>
 						<div class="control">
-							<div class="clearfix">
-								<input type="text" name="password" value="1234567" style="width: 160px; float: left;"> <span title="Сгенерировать другой пароль." id="more_pass" class="btn" style="float: right;">Ещё пароль</span>
-							</div>
-							<small class="gray">Пароль нужен для запуска создаия снимка системы, что бы любой пользователь не смог это сделать. Пароль сгенерировался автоматически.</small>
+							<input type="text" name="icon_url" value="https://raw.github.com/pafnuty/AntiShell/master/img/as_sprite.png">
+							<small class="gray">Иконки-индикаторы отображаются для наглядности. Вы можете сохранить картинку с иконкаи себе на сайт и прописать полный путь к этой картинке.</small>
 						</div>
 					</div>
 
 					<div class="form-field clearfix">
 						<div class="lebel">&nbsp;</div>
 						<div class="control">
-							<button class="btn" type="submit" style="width:322px;">Установить антивирус на сайт!</button>
+							<button class="btn" type="submit" style="width:322px;">Установить AntiShell!</button>
 						</div>
 					</div>
 				
