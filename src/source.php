@@ -25,47 +25,44 @@ header('Content-type: text/html; charset=windows-1251');
 //////////////////////////// Настройки ////////////////////////////
 $config             = array(
 	// Вкл/выкл
-	'on' => true,
+	'on' => [on],
 	
 	// Подпись в письме
-	'sitename' => 'АнтиШелл: dle-faq.ru',
+	'sitename' => '[sitename]',
 	
 	// Начальный путь проверки. '' - корень сайта
 	// Для сканирования отдельной папки: '/folderName'
-	'path' => '',
+	'path' => '[path]',
 	
 	// Куда сохранять результат скана системы.
 	// Путь от корня сайта.
-	'scanfile' => '/uploads/scanme.png',
+	'scanfile' => '[scanfile]',
 	
 	// Список расширений файлов, которые необходимо проверять. '' - означает любые расширения. Расширения указывать без точек через запятую
 	// Например, 'php,cgi,pl,perl,php3,php4,php5,php6,tpl,js,htaccess,htm,html,css,swf,txt,db,lng',
-	'ext' => '',
+	'ext' => '[ext]',
 	
 	// Список расширений файлов, которые не надо учитывать при проверке. Расширения указывать без точек через запятую
 	// А также можно указывать имена файлов, которые тоже не надо учитывать. Например, 'skipfile' => 'index.php,jpg', - здесь не будут учитываться файлы с именами 'index.php' и все файлы с расширением JPG
-	'skipfile' => 'jpg,jpeg,gif,bmp,png,rar,zip,tmp,gz,xml,flv,exe,txt,doc,pdf,avi,mp3,mp4,wmv,m4v,m4a,mov,3gp,f4v,3gp,mpg,mpeg',
+	'skipfile' => '[skipfile]',
 	
 	// Список папок, которые не надо проверять. Путь указывается относительно значения переменной 'path'. Перечилять папки через запятую
 	// Например, 'skipdir' => '/folder,/files/web',
-	'skipdir' => '/engine/cache',
+	'skipdir' => '[skipdir]',
 	
-	// Куда отправлять отчеты
-	'email' => 'pafnuty10@gmail.com',
+	// Email, на который отправлять отчеты
+	'email' => '[email]',
 
 	// Email отправителя
 	// Если не задан - будет взят из предыдущего параметра
-	'from_email' => 'robot@de-faq.ru',
+	'from_email' => '[from_email]',
 	
 	// Отображать на экране статистику проверки? На почту в любом случае будет отправляться.
-	'showtext' => 1,
-	
-	// Лимит времени выполнения скрипта, сек.
-	'timeout' => 60,
+	'showtext' => [showtext],
 
 	// Путь к файлу с картинками-индикаторами
 	// Можно скопировать файл себе на хостинг и вставить сылку на него сюда.
-	'icon_url' => 'https://raw.github.com/pafnuty/AntiShell/master/img/as_sprite.png'
+	'icon_url' => '[icon_url]'
 );
 
 if(!$config['on']) die("Wat?");
