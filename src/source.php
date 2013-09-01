@@ -13,7 +13,7 @@
  * ICQ: 817233
  * email: pafnuty10@gmail.com
  * =============================================================================
- * Версия: 1.0.1 (01.09.2013)
+ * Версия: [version_id] ([version_date])
  * =============================================================================
  */ 
 
@@ -25,7 +25,7 @@ header('Content-type: text/html; charset=windows-1251');
 //////////////////////////// Настройки ////////////////////////////
 $config             = array(
 	// Вкл/выкл
-	'on' => [on],
+	'on' => true,
 	
 	// Подпись в письме
 	'sitename' => '[sitename]',
@@ -58,7 +58,7 @@ $config             = array(
 	'from_email' => '[from_email]',
 	
 	// Отображать на экране статистику проверки? На почту в любом случае будет отправляться.
-	'showtext' => [showtext],
+	'showtext' => 1,
 
 	// Путь к файлу с картинками-индикаторами
 	// Можно скопировать файл себе на хостинг и вставить сылку на него сюда.
@@ -266,6 +266,7 @@ if (file_exists(ROOT_DIR . $config['scanfile'])) {
 		$__wd1			= wordSpan($total_files, 'фай|л|ла|лов');
 
 		$logs = <<<HTML
+<title>{$config['sitename']}</title>
 <body style="background-color:#ecf0f1; max-width: 800px; margin: 0 auto;padding:0;">
 	<h1 style="font:normal 22px 'Trebuchet MS',Arial,sans-serif;color:#2980b9;padding:40px 10px 10px;text-align: center;">{$config['sitename']} - Сканирование завершено</h1>
 	<div style="background-color:#ecf0f1;font:normal 16px 'Trebuchet MS',Arial,sans-serif;color:#7f8c8d;margin:0;padding:5px 5px 35px 5px;">
