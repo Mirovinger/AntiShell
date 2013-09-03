@@ -42,10 +42,15 @@
 		textarea:focus{background: #bdc3c7;border-color: #2980b9; color:#2c3e50;}
 		input[type="text"] {padding: 4px 10px;width: 250px;vertical-align: middle;height: 24px;line-height: 24px;border: solid 1px #95a5a6;display: inline-block;-webkit-border-radius: 3px;-moz-border-radius:3px;border-radius: 3px;}
 		input[type="text"]:focus {border-color: #3498db;color:#2c3e50;outline: none;-webkit-box-shadow: 0 0 0 3px rgba(41, 128, 185, .5);-moz-box-shadow: 0 0 0 3px rgba(41, 128, 185, .5);box-shadow: 0 0 0 3px rgba(41, 128, 185, .5);}
+		form {margin-bottom: 10px;}
 		.form-field {margin-bottom: 18px; margin-left: 90px;}
 		.lebel {float: left;width: 300px;padding-right: 10px;line-height: 32px; text-align: right;}
 		.control {width: 322px;float: left;}
 		.control input[type="text"] { width: 300px; margin-bottom: 2px; }
+		.form-field-large .lebel {width: 100px;}
+		.form-field-large .control {width: 622px;}
+		.form-field-large .control input[type="text"] { width: 600px; margin-bottom: 2px; }
+		.alert {background: #ebada7; color: #c0392b; text-shadow: none;}
 		.clearfix:before, .clearfix:after {content: ""; display: table;}
 		.clearfix:after {clear: both;}
 		.clearfix {*zoom: 1;} 
@@ -55,14 +60,14 @@
 </head>
 <body>
 	<header>
-		<h1 class="ta-center"><big class="red">AntiShell</big></small> <br><span class="blue">Мастер установки скрипта для контроля за cоcтоянием файлов Вашего сайта</span></h1>
+		<h1 class="ta-center"><big class="red">AntiShell</big></small> <br><span class="blue">Мастер установки скрипта для мониторинга изменений файлов Вашего сайта</span></h1>
 		<hr>
 	</header>
 	<section>  
 		<h2 class="gray ta-center">Написан специально для быстрой установки скрипта на сайт без лишних заморочек.</h2>
 		<p class="ta-center">
 			<a href="https://github.com/pafnuty/AntiShell" target="_blank" class="btn">Репозиторий на GitHub</a>
-			<!-- <a href="" class="btn">Описание скрипта</a> -->
+			<a href="http://antishell.ru/" target="_blank" class="btn">Сайт поддержки скрипта</a>
 		</p>
 		<?php
 			$output = anti_shell_installer();
@@ -136,28 +141,110 @@
 			$pth = str_ireplace($bsn, '', $script_filename);
 			
 			if (!file_exists($docroot.$script_filename)) {
-				$output .= '<div class="descr">';
+				$output .= '<div class="descr alert">';
 				$output .= '<h2 class="red">Скрипт не установлен!</h2>' ;
-				$output .= '<p>Скроее всего нет прав на запись файлов. Установите на папку <b class="red">'.$pth.'</b> права на запись: CHMOD 777. <br />И не забудьте вернуть обратно после успешной установки антивируса.</p>';
+				$output .= '<p>Скроее всего нет прав на запись файлов. Установите на папку <b class="blue">'.$pth.'</b> права на запись: CHMOD 777. <br />И не забудьте вернуть обратно после успешной установки скрипта.</p>';
 				$output .= '<a class="btn" href="'.$_SERVER["PHP_SELF"].'" title="Вернуться обратно">Вернуться обратно</a>';
 				$output .= '</div>';
 			} else {
 
-				$output .= '<div class="descr">';
-				$output .= '<h2 class="red">Установка завершена! Обязательно удалите файл установщика!</h2>';
-				$output .= '<p>Теперь можно запускать создание снимка системы. И не забудьте сохранить ссылку на запуск создания снимка системы, она вам понядобится.</p>';
-				$output .= ' <a href="http://'.$_SERVER['HTTP_HOST'].$script_filename.'" target="_blank" title="Будет запущена проверка системы: http://'.$_SERVER['HTTP_HOST'].$script_filename.'" class="btn">Запустить проверку</a></p>';
-				$output .= '<small class="red">Если вдруг размер снимка равен нулю или скрипт говорит, что добавлено 0 файлов, посавтьте на корневую папку сайта CMOD 755.</small></div>';
-				$output .= '<h2>Команда для выполнения через cron <small>(Скопируйте её и вставьте в планировщик)</small>:</h2>';
-				$output .= '<div class="descr">
-					<div><input type="text" onclick="this.select();" style="width: 600px;" name="docroot" value="/usr/bin/php -f '.$docroot.$script_filename.'"></div>
-					<small class="red">Путь к php (<code class="blue">/usr/bin/php</code>) у вас может отличаться!</small> <small class="gray">Проверьте корректность пути (можно уточнить в ТП хостинга).</small> <br />
-					<p>Рекомендую ставить в планировщик минимум раз в сутки. Если ресурсы хостинга позволяют - раз в час. Так вы отловите зловредный код или просто изменения в файлах очеь быстро.</p>
-				</div>';
-				$output .= '</div>';
+				$output .= <<<HTML
+				<div class="descr">
+					<h2 class="red">Установка AntiShell скрипта на Вас сайт завершена!</h2>
+					<div class="form-field form-field-large clearfix">
+					<div class="lebel">&nbsp;</div>
+						<div class="control">
+							<a href="http://{$_SERVER['HTTP_HOST']}{$script_filename}" target="_blank" title="Будет запущена проверка системы: http://{$_SERVER['HTTP_HOST']}{$script_filename}" class="btn">Запустить проверку</a> &nbsp; <small>Адрес скрипта: http://{$_SERVER['HTTP_HOST']}{$script_filename}</small>
+						</div>
+					</div>
+					<hr>
+					<h2>Команды для выполнения через cron <small>(Скопируйте одну и вставьте в планировщик)</small>:</h2>
+					<div class="form-field form-field-large clearfix">
+						<div class="lebel">Через wget</div>
+						<div class="control">
+							<input type="text" onclick="this.select();" value='/usr/bin/wget -O - -q "http://{$_SERVER['HTTP_HOST']}{$script_filename}"'>
+						</div>
+					</div>
+					<div class="form-field form-field-large clearfix">
+						<div class="lebel">Через php</div>
+						<div class="control">
+							<input type="text" onclick="this.select();" value="/usr/bin/php -f {$docroot}{$script_filename}"></p>
+							<small class="red">Путь к php или wget у вас может отличаться!</small> <small class="gray">Проверьте корректность пути (можно уточнить в ТП хостинга).</small>
+							<p>Рекомендую ставить в планировщик минимум раз в сутки. Если ресурсы хостинга позволяют - раз в час. Так вы отловите зловредный код или просто изменения в файлах очеь быстро.</p>
+						</div>
+					</div>
+					<hr>
+					<div class="form-field form-field-large clearfix">
+						<div class="lebel">&nbsp;</div>
+						<div class="control">
+							<p>Отправить информацию об установке скрипта на email</p>
+							<form method="post">
+								<input type="hidden" value="1" name="sendmail" />
+								<input type="hidden" value="{$_POST['yourmail']}" name="ym" />
+								<input type="hidden" value="{$_POST['sitename']}" name="sn" />
+								<input type="hidden" value="Адрес скрипта: http://{$_SERVER['HTTP_HOST']}{$script_filename}" name="scriptlink" />
+								<input type="hidden" value='/usr/bin/wget -O - -q "http://{$_SERVER['HTTP_HOST']}{$script_filename}"' name="wgetlink">
+								<input type="hidden" value="/usr/bin/php -f {$docroot}{$script_filename}" name="phplink">
+								<input type="submit" class="btn" value="Отправить данные на почту" />
+							</form> 
+							<small>На адрес <b class="red">{$_POST['yourmail']}</b> будет отправлена следующая информация:</small>
+							<br><small>- ссылка на файл со скриптом.</small>
+							<br><small>- команды для вставки в планировщик задач.</small>
+						</div>
+					</div>
+
+					<h2 class="red">ВНИМАНИЕ! Обязательно удалите файл установщика!</h2>
+				</div>
+HTML;
 			}
 		}
+		// Если через $_POST передаётся параметр sendmail, отправляем соответствующее уведомление на почту.
+		elseif (!empty($_POST['sendmail'])) {
+			/**
+			 * Отправка уведомления на email
+			 * @param string $buffer - что отправляем
+			 * @param $subject - Тема сообщения
+			 * @return type
+			 */
+			function mailfromsite($buffer, $subject, $email, $text = "Установлен AntiShell скрипт")
+			{
+				if (trim($subject) != '')
+					$from = mime_encode($subject) . " <" . $email . ">";
+				else
+					$from = "<" . $email . ">";
 
+				$buffer  = str_replace("\r", "", $buffer);
+				$headers = "From: " . $from . "\r\n";
+				$headers .= "X-Mailer: ANTI-SHELL\r\n";
+				$headers .= "Content-Type: text/html; charset=windows-1251\r\n";
+				$headers .= "Content-Transfer-Encoding: 8bit\r\n";
+				$headers .= "X-Priority: 1 (Highest)";
+
+				return mail($email, mime_encode($text), $buffer, $headers);
+			}
+			/**
+			 * Преобразование кодировки в кодировку )))
+			 * @param string $text 
+			 * @param $charset 
+			 * @return string
+			 */
+			function mime_encode($text, $charset = "windows-1251")
+			{
+				return "=?" . $charset . "?B?" . base64_encode($text) . "?=";
+			}
+			$mail_text = 'Здравствуйте! <br /> Поздравляем! Вы установили AntiShell скрипт себе на сайт! <br />';
+			$mail_text .= '<br />'.$_POST['scriptlink'];
+			$mail_text .= '<br />команда wget: '.$_POST['wgetlink'];
+			$mail_text .= '<br />команда php: '.$_POST['phplink'];
+
+			mailfromsite($mail_text, $_POST['sn'], $_POST['ym']);
+			echo "<div class='descr'>";
+			echo "<h2>Вам на почту ".$_POST['ym']." выслано письмо со следующим содержанием:</h2>";
+			echo "<hr /><div class='blue'>".$mail_text."</div><hr />";
+			echo "<h2 class='red'>А теперь удалите файл установщика!</h2>";
+			echo "</div>";
+			
+		}
 		// Если через $_POST ничего не передаётся, выводим форму для установки модуля
 		else {
 			
