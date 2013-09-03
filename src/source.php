@@ -299,8 +299,12 @@ HTML;
 
 } else {
 	@rename(ROOT_DIR.$config['scanfile'].".tmp",ROOT_DIR.$config['scanfile']);
-	echo "\n\n<br/><br/>Файл скана успешно создан ".date("Y-m-d в H:i:s");
-	echo "\n<br/>Время выполнения: ".(microtime(true)-$time_start)." сек.";
+	if (file_exists(ROOT_DIR.$config['scanfile'])) {
+		echo "\n\n<br/><br/>Файл снимка успешно создан ".date("Y-m-d в H:i:s");
+		echo "\n<br/>Время выполнения: ".(microtime(true)-$time_start)." сек.";
+	} else {
+		echo "Файл снимка не создан! Возможно не хватает прав. Установите на папку, содержащую снимок права на запись (CHMOD 777). Если после установки нужных прав это сообщение появляется вновь - обратитесь за помошью на сайт <a href='http://antishell.ru/' target='_blank'>antishell.ru</a>";
+	}
 }
 
 @rename(ROOT_DIR.$config['scanfile'].".tmp",ROOT_DIR.$config['scanfile']);
