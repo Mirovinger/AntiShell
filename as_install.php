@@ -150,7 +150,7 @@
 
 				$output .= <<<HTML
 				<div class="descr">
-					<h2 class="red">Установка AntiShell скрипта на Вас сайт завершена!</h2>
+					<h2 class="red">Установка AntiShell скрипта на Ваш сайт завершена!</h2>
 					<div class="form-field form-field-large clearfix">
 					<div class="lebel">&nbsp;</div>
 						<div class="control">
@@ -316,7 +316,7 @@ HTML;
 						<div class="lebel">Список папок, которые не надо проверять</div>
 						<div class="control">
 							<input type="text" name="skipdir" value="/engine/cache">
-							<small class="gray">Путь указывается относительно корня сайта. Разделитель папок символ - запятая.</small>
+							<small class="gray">Путь указывается относительно корня сайта. Разделитель папок - запятая.</small>
 						</div>
 					</div>
 
