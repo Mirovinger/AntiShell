@@ -266,8 +266,8 @@ HTML;
 						<div class="lebel">Путь к файлу скрипта от корня сайта</div>
 						<div class="control">
 							<input type="text" name="script_filename" value="/antishell.php">
-							<small class="red">Обязательно изменить!</small>
-							<small class="gray">Лучше всего засунуть очень глубоко, чтобы никто не нашёл. Так же настоятельно рекомендуется сменить имя файла на что-то нечитаемое. <br>К примеру так: <code>/engine/classes/min/lib/MrClay/Cli/4589566Gdty.php</code></small>
+							<small class="red">Обязательно изменить имя и путь файла!</small>
+							<small class="gray"><br>По указанному адресу будет создан файл с кодом скрипта. Папка в которой будет создаваться скрипт, должна имет права на запись (CHMOD 777). Рекоендуется прятать скрипт поглубже, а ссылку не афишировать. <br>К примеру так: <code>/engine/classes/min/lib/old.php</code></small>
 						</div>
 					</div>
 				
@@ -348,6 +348,7 @@ HTML;
 						<div class="lebel">&nbsp;</div>
 						<div class="control">
 							<button class="btn" type="submit" style="width:322px;">Установить AntiShell!</button>
+							<small>Будет произведенеа автоматическая установка скрипта на сайт в соответствии с заданными параметрами.</small>
 						</div>
 					</div>
 				
