@@ -88,7 +88,7 @@ define('DOC_CHARSET', 'utf-8');
 		$docroot = $_SERVER["DOCUMENT_ROOT"];
 		$output = '';
 		// Ветка на гитхабе
-		$github = 'https://raw.github.com/pafnuty/AntiShell/master/';
+		$github = 'https://raw.github.com/pafnuty/AntiShell/utf/';
 		$ver = file_get_contents($github.'verdion_id.json');
 		if ($ver) {
 			$version = json_decode($ver, true);
