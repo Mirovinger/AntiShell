@@ -359,7 +359,7 @@ HTML;
 					<div class="form-field clearfix">
 						<div class="lebel">Путь к иконкам-индикаторам</div>
 						<div class="control">
-							<input type="text" name="icon_url" value="$githubimg/as_sprite.png">
+							<input type="text" name="icon_url" value="{$github}img/as_sprite.png">
 							<small class="gray">Иконки-индикаторы отображаются для наглядности. Вы можете сохранить картинку с иконками себе на сайт и прописать полный путь к этой картинке.</small>
 						</div>
 					</div>
