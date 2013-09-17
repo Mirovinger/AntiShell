@@ -1,3 +1,6 @@
+<?php
+define('DOC_CHARSET', 'utf-8');
+?>
 <!DOCTYPE html>
 <!--[if lt IE 7]>      <html class="lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
 <!--[if IE 7]>         <html class="lt-ie9 lt-ie8"> <![endif]-->
@@ -5,7 +8,7 @@
 <!--[if gt IE 8]><!--> <html> <!--<![endif]-->
 
 <head>
-	<meta charset="windows-1251">
+	<meta charset="<?=DOC_CHARSET?>">
 	<title>Установка AntiShell</title>
 	<meta name="viewport" content="width=device-width">
 	<link href="http://fonts.googleapis.com/css?family=Ubuntu+Condensed&subset=latin,cyrillic" rel="stylesheet">
@@ -84,7 +87,9 @@
 	function anti_shell_installer() {
 		$docroot = $_SERVER["DOCUMENT_ROOT"];
 		$output = '';
-		$ver = file_get_contents('https://raw.github.com/pafnuty/AntiShell/master/verdion_id.json');
+		// Ветка на гитхабе
+		$github = 'https://raw.github.com/pafnuty/AntiShell/master/';
+		$ver = file_get_contents($github.'verdion_id.json');
 		if ($ver) {
 			$version = json_decode($ver, true);
 		} 
@@ -94,15 +99,18 @@
 
 			// Определяем переменные
 
-			$as = file_get_contents('https://raw.github.com/pafnuty/AntiShell/master/src/source.php');
-			$as = iconv("utf-8", "windows-1251//IGNORE", $as);
+			$as = file_get_contents($github.'src/source.php');
+			if (DOC_CHARSET  == 'windows-1251') {
+				$as = iconv("utf-8", "windows-1251//IGNORE", $as);
+			}
 
 			if (!$as) {
-				die('Невозможно получить доступ к установочному файлу по адресу: https://raw.github.com/pafnuty/AntiShell/master/src/source.php');
+				die('Невозможно получить доступ к установочному файлу по адресу: '.$github.'src/source.php');
 			}
 			
 
 			$as_config_array = array(
+					'[root_dir]',
 					'[version_id]',
 					'[version_date]',
 					'[sitename]',
@@ -113,9 +121,11 @@
 					'[skipdir]'	,
 					'[email]',
 					'[from_email]',
-					'[icon_url]'
+					'[icon_url]',
+					'[doc_charset]'
 				);
 			$as_config_values = array(
+				$_POST['root_dir'],
 				$version['id'],
 				$version['date'],
 				$_POST['sitename'],
@@ -126,7 +136,8 @@
 				($_POST['skipdir']) ? $_POST['skipdir'] : "",
 				$_POST['yourmail'],
 				($_POST['from']) ? $_POST['from'] : "",
-				$_POST['icon_url']
+				$_POST['icon_url'],
+				DOC_CHARSET
 				);
 			$as = str_replace($as_config_array, $as_config_values, $as);
 
@@ -209,18 +220,20 @@ HTML;
 			function mailfromsite($buffer, $subject, $email, $text = "Установлен AntiShell скрипт")
 			{
 				if (trim($subject) != '')
-					$from = mime_encode($subject) . " <" . $email . ">";
+					$from = mime_encode($subject, DOC_CHARSET) . " <" . $email . ">";
 				else
 					$from = "<" . $email . ">";
 
 				$buffer  = str_replace("\r", "", $buffer);
 				$headers = "From: " . $from . "\r\n";
-				$headers .= "X-Mailer: ANTI-SHELL\r\n";
-				$headers .= "Content-Type: text/html; charset=windows-1251\r\n";
+				$headers .= "X-Mailer: PHP/".phpversion();
+				$headers .= "Content-Type: text/html; charset=" . DOC_CHARSET . "\r\n";
 				$headers .= "Content-Transfer-Encoding: 8bit\r\n";
 				$headers .= "X-Priority: 1 (Highest)";
-
-				return mail($email, mime_encode($text), $buffer, $headers);
+				
+				echo "<pre class='dle-pre'>|||"; print_r($email.'|||'.mime_encode($text, DOC_CHARSET).'|||'. $buffer.'|||'. $headers); echo "</pre>";
+				
+				return mail($email, mime_encode($text, DOC_CHARSET), $buffer, $headers);
 			}
 			/**
 			 * Преобразование кодировки в кодировку )))
@@ -262,6 +275,13 @@ HTML;
 				<form method="POST">            
 					<input type="hidden" name="install" value="1">
 					
+					<div class="form-field clearfix">
+						<div class="lebel">Путь к корню сайта</div>
+						<div class="control">
+							<input type="text" name="root_dir" value="$docroot">
+							<small class="gray">Путь определяется автоматически. Если знаете что делаете или точно знаете, что путь должен быть другой - измените его.</small>
+						</div>
+					</div>
 					<div class="form-field clearfix">
 						<div class="lebel">Путь к файлу скрипта от корня сайта</div>
 						<div class="control">
@@ -339,7 +359,7 @@ HTML;
 					<div class="form-field clearfix">
 						<div class="lebel">Путь к иконкам-индикаторам</div>
 						<div class="control">
-							<input type="text" name="icon_url" value="https://raw.github.com/pafnuty/AntiShell/master/img/as_sprite.png">
+							<input type="text" name="icon_url" value="$githubimg/as_sprite.png">
 							<small class="gray">Иконки-индикаторы отображаются для наглядности. Вы можете сохранить картинку с иконками себе на сайт и прописать полный путь к этой картинке.</small>
 						</div>
 					</div>

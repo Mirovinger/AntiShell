@@ -20,7 +20,7 @@
 @error_reporting ( E_ALL ^ E_WARNING ^ E_NOTICE );
 @ini_set ( 'error_reporting', E_ALL ^ E_WARNING ^ E_NOTICE );
 @ini_set ( 'display_errors', true );
-header('Content-type: text/html; charset=windows-1251');
+header('Content-type: text/html; charset=[doc_charset]');
 
 //////////////////////////// Настройки ////////////////////////////
 $config             = array(
@@ -74,13 +74,13 @@ $config['skipdir']	= str2array($config['skipdir']);
 
 $time_start  = microtime(true);
 
-/////////////////////// Определение путей /////////////////////////
-$root        = explode($_SERVER['HTTP_HOST'], dirname(__FILE__));
-$script_path = array_pop($root);
-$root_dir    = implode($_SERVER['HTTP_HOST'], $root) . $_SERVER['HTTP_HOST'];
-define('ROOT_DIR', $root_dir);
-unset($root_dir);
-///////////////////////////////////////////////////////////////////
+
+// $root        = explode($_SERVER['HTTP_HOST'], dirname(__FILE__));
+// $script_path = array_pop($root);
+// $root_dir    = implode($_SERVER['HTTP_HOST'], $root) . $_SERVER['HTTP_HOST'];
+define('ROOT_DIR', '[root_dir]');
+// unset($root_dir);
+
 
 /**
  * Преобразуем строку в массив
@@ -146,7 +146,7 @@ function mailfromsite($buffer, $subject, $from_email, $email, $text = "На са
 	$buffer  = str_replace("\r", "", $buffer);
 	$headers = "From: " . $from . "\r\n";
 	$headers .= "X-Mailer: ANTI-SHELL\r\n";
-	$headers .= "Content-Type: text/html; charset=windows-1251\r\n";
+	$headers .= "Content-Type: text/html; charset=[doc_charset]\r\n";
 	$headers .= "Content-Transfer-Encoding: 8bit\r\n";
 	$headers .= "X-Priority: 1 (Highest)";
 
@@ -158,7 +158,7 @@ function mailfromsite($buffer, $subject, $from_email, $email, $text = "На са
  * @param $charset 
  * @return string
  */
-function mime_encode($text, $charset = "windows-1251")
+function mime_encode($text, $charset = "[doc_charset]")
 {
 	return "=?" . $charset . "?B?" . base64_encode($text) . "?=";
 }
