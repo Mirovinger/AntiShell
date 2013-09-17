@@ -340,7 +340,7 @@ HTML;
 						<div class="lebel">Путь к иконкам-индикаторам</div>
 						<div class="control">
 							<input type="text" name="icon_url" value="https://raw.github.com/pafnuty/AntiShell/master/img/as_sprite.png">
-							<small class="gray">Иконки-индикаторы отображаются для наглядности. Вы можете сохранить картинку с иконкаи себе на сайт и прописать полный путь к этой картинке.</small>
+							<small class="gray">Иконки-индикаторы отображаются для наглядности. Вы можете сохранить картинку с иконками себе на сайт и прописать полный путь к этой картинке.</small>
 						</div>
 					</div>
 
