@@ -1,5 +1,18 @@
 <?php
-define('DOC_CHARSET', 'utf-8');
+/**
+ * В зависимости от кодировки вашего сайта нужно удалить лишнюю строку.
+ * Если Ваш сайт работает в кодровке windows-1251 - удалите строку, содержащую запись utf-8
+ * Если сайт в utf-8 - удалите строку содержащую запись windows-1251
+ * Удалите лишнюю строку:
+ */
+
+define('DOC_CHARSET', 'windows-1251'); 	// Удалить, если сайт в UTF-8
+define('DOC_CHARSET', 'utf-8');        	// Удалить, если сайт в windows-1251
+
+/**
+ * Дальше трогать не нужно
+ */
+
 ?>
 <!DOCTYPE html>
 <!--[if lt IE 7]>      <html class="lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
@@ -63,7 +76,7 @@ define('DOC_CHARSET', 'utf-8');
 </head>
 <body>
 	<header>
-		<h1 class="ta-center"><big class="red">AntiShell</big></small> <br><span class="blue">Мастер установки скрипта для мониторинга изменений файлов Вашего сайта</span></h1>
+		<h1 class="ta-center"><big class="red">AntiShell</big></small> <br><span class="blue">Мастер установки скрипта для предупреждения взлома Вашего сайта</span></h1>
 		<hr>
 	</header>
 	<section>  
@@ -88,7 +101,8 @@ define('DOC_CHARSET', 'utf-8');
 		$docroot = $_SERVER["DOCUMENT_ROOT"];
 		$output = '';
 		// Ветка на гитхабе
-		$github = 'https://raw.github.com/pafnuty/AntiShell/utf/';
+		$github = 'https://raw.github.com/pafnuty/AntiShell/master/';
+
 		$ver = file_get_contents($github.'verdion_id.json');
 		if ($ver) {
 			$version = json_decode($ver, true);
@@ -154,8 +168,9 @@ define('DOC_CHARSET', 'utf-8');
 			if (!file_exists($docroot.$script_filename)) {
 				$output .= '<div class="descr alert">';
 				$output .= '<h2 class="red">Скрипт не установлен!</h2>' ;
-				$output .= '<p>Скроее всего нет прав на запись файлов. Установите на папку <b class="blue">'.$pth.'</b> права на запись: CHMOD 777. <br />И не забудьте вернуть обратно после успешной установки скрипта.</p>';
-				$output .= '<a class="btn" href="'.$_SERVER["PHP_SELF"].'" title="Вернуться обратно">Вернуться обратно</a>';
+				$output .= '<p>Мастер установки не смог получить доступ к файлу скрипта. Это значит что либо нет прав на запись, либо не верно казан путь к корню сайта.</p>' ;
+				$output .= '<p>Установите на папку <b class="blue">'.$pth.'</b> права на запись: CHMOD 777. <br />И не забудьте вернуть обратно после успешной установки скрипта.</p>';
+				$output .= '<a class="btn" href="javascript:history.go(-1);" title="Вернуться назад">Вернуться назад</a>';
 				$output .= '</div>';
 			} else {
 
@@ -181,7 +196,7 @@ define('DOC_CHARSET', 'utf-8');
 						<div class="control">
 							<input type="text" onclick="this.select();" value="/usr/bin/php -f {$docroot}{$script_filename}"></p>
 							<small class="red">Путь к php или wget у вас может отличаться!</small> <small class="gray">Проверьте корректность пути (можно уточнить в ТП хостинга).</small>
-							<p>Рекомендую ставить в планировщик минимум раз в сутки. Если ресурсы хостинга позволяют - раз в час. Так вы отловите зловредный код или просто изменения в файлах очеь быстро.</p>
+							<p>Рекомендую ставить в планировщик минимум раз в сутки (лучше раз в час). Если ресурсы хостинга позволяют - раз в час. Так вы отловите зловредный код или просто изменения в файлах очеь быстро.</p>
 						</div>
 					</div>
 					<hr>
@@ -204,7 +219,7 @@ define('DOC_CHARSET', 'utf-8');
 						</div>
 					</div>
 
-					<h2 class="red">ВНИМАНИЕ! Обязательно удалите файл установщика!</h2>
+					<h2 class="red">ВНИМАНИЕ! Обязательно удалите файл установщика после окончания установки!</h2>
 				</div>
 HTML;
 			}
@@ -217,23 +232,24 @@ HTML;
 			 * @param $subject - Тема сообщения
 			 * @return type
 			 */
-			function mailfromsite($buffer, $subject, $email, $text = "Установлен AntiShell скрипт")
+			function mailfromsite($buffer, $subject, $email, $text = "Установлен AntiShell скрипт", $from_email = 'noreply@antishell.ru')
 			{
+				$from_mail = (trim($from_email) !='') ? $from_email : $email;
+
 				if (trim($subject) != '')
-					$from = mime_encode($subject, DOC_CHARSET) . " <" . $email . ">";
+					$from = mime_encode($subject) . " <" . $from_mail . ">";
 				else
-					$from = "<" . $email . ">";
+					$from = "<" . $from_mail . ">";
 
 				$buffer  = str_replace("\r", "", $buffer);
 				$headers = "From: " . $from . "\r\n";
-				$headers .= "X-Mailer: PHP/".phpversion();
+				$headers .= "X-Mailer: ANTI-SHELL\r\n";
 				$headers .= "Content-Type: text/html; charset=" . DOC_CHARSET . "\r\n";
 				$headers .= "Content-Transfer-Encoding: 8bit\r\n";
 				$headers .= "X-Priority: 1 (Highest)";
-				
-				echo "<pre class='dle-pre'>|||"; print_r($email.'|||'.mime_encode($text, DOC_CHARSET).'|||'. $buffer.'|||'. $headers); echo "</pre>";
-				
-				return mail($email, mime_encode($text, DOC_CHARSET), $buffer, $headers);
+
+				$send_mail = mail($email, mime_encode($text), $buffer, $headers);
+				return $send_mail;
 			}
 			/**
 			 * Преобразование кодировки в кодировку )))
@@ -241,20 +257,36 @@ HTML;
 			 * @param $charset 
 			 * @return string
 			 */
-			function mime_encode($text, $charset = "windows-1251")
+			function mime_encode($text, $charset = DOC_CHARSET)
 			{
 				return "=?" . $charset . "?B?" . base64_encode($text) . "?=";
 			}
-			$mail_text = 'Здравствуйте! <br /> Поздравляем! Вы установили AntiShell скрипт себе на сайт! <br />';
-			$mail_text .= '<br />'.$_POST['scriptlink'];
-			$mail_text .= '<br />команда wget: '.$_POST['wgetlink'];
-			$mail_text .= '<br />команда php: '.$_POST['phplink'];
+			$mail_text = <<<HTML
+<body style="background-color:#ecf0f1; margin: 0; padding:0;">
+	<div style="max-width: 800px; margin: 0 auto;">
+		<h1 style="font:normal 22px 'Trebuchet MS', Arial, sans-serif; color:#2980b9; padding:40px 10px 10px; text-align: center;">Поздравляем!</h1> 
+		<div style="background-color:#ecf0f1; font:normal 16px 'Trebuchet MS', Arial, sans-serif; color:#7f8c8d; margin:0; padding: 0px 20px 20px 20px;">
+			<h4>Вы успешно установили AntiShell скрипт себе на сайт!</h4>
+			<p>{$_POST['scriptlink']}</p>
+			<p><b>Команды для выполнения через cron:</b></p>
+			<p>Команда wget: <span style="display:inline-block; background: #FFFFBF; color: #FF0000; padding: 0 4px;">{$_POST['wgetlink']}</span></p>
+			<p>Команда php: <span style="display:inline-block; background: #FFFFBF; color: #FF0000; padding: 0 4px;">{$_POST['phplink']}</span></p>
+			<p>Не забывайте, что пути к модулям wget и php могут отличаться от приведённых т.к. они лишь для примера.</p>
+			----------------------------------
+			<p>По вопросам работы скрипта обращайтесь а сайт <a href="http://antishell.ru/" target="_blank">antishell.ru</a></p>
+		</div>
+	</div>
+</body>
+HTML;
 
-			mailfromsite($mail_text, $_POST['sn'], $_POST['ym']);
+			$sendMail = mailfromsite($mail_text, $_POST['sn'], $_POST['ym']);
 			echo "<div class='descr'>";
-			echo "<h2>Вам на почту ".$_POST['ym']." выслано письмо со следующим содержанием:</h2>";
-			echo "<hr /><div class='blue'>".$mail_text."</div><hr />";
-			echo "<h2 class='red'>А теперь удалите файл установщика!</h2>";
+			if ($sendMail) {
+				echo "<h2>Вам на почту <span class=\"blue\">".$_POST['ym']."</span> выслано письмо.</h2>";
+			} else {
+				echo "<h2 class='red'>Письмо не отправлено.</h2>";
+			}
+				echo "<h2 class='red'>А теперь удалите файл установщика!</h2>";
 			echo "</div>";
 			
 		}
