@@ -20,7 +20,7 @@
 @error_reporting ( E_ALL ^ E_WARNING ^ E_NOTICE );
 @ini_set ( 'error_reporting', E_ALL ^ E_WARNING ^ E_NOTICE );
 @ini_set ( 'display_errors', true );
-header('Content-type: text/html; charset=windows-1251');
+header('Content-type: text/html; charset=[doc_charset]');
 
 //////////////////////////// Настройки ////////////////////////////
 $config             = array(
@@ -74,13 +74,13 @@ $config['skipdir']	= str2array($config['skipdir']);
 
 $time_start  = microtime(true);
 
-/////////////////////// Определение путей /////////////////////////
-$root        = explode($_SERVER['HTTP_HOST'], dirname(__FILE__));
-$script_path = array_pop($root);
-$root_dir    = implode($_SERVER['HTTP_HOST'], $root) . $_SERVER['HTTP_HOST'];
-define('ROOT_DIR', $root_dir);
-unset($root_dir);
-///////////////////////////////////////////////////////////////////
+
+// $root        = explode($_SERVER['HTTP_HOST'], dirname(__FILE__));
+// $script_path = array_pop($root);
+// $root_dir    = implode($_SERVER['HTTP_HOST'], $root) . $_SERVER['HTTP_HOST'];
+define('ROOT_DIR', '[root_dir]');
+// unset($root_dir);
+
 
 /**
  * Преобразуем строку в массив
@@ -146,7 +146,7 @@ function mailfromsite($buffer, $subject, $from_email, $email, $text = "На са
 	$buffer  = str_replace("\r", "", $buffer);
 	$headers = "From: " . $from . "\r\n";
 	$headers .= "X-Mailer: ANTI-SHELL\r\n";
-	$headers .= "Content-Type: text/html; charset=windows-1251\r\n";
+	$headers .= "Content-Type: text/html; charset=[doc_charset]\r\n";
 	$headers .= "Content-Transfer-Encoding: 8bit\r\n";
 	$headers .= "X-Priority: 1 (Highest)";
 
@@ -158,7 +158,7 @@ function mailfromsite($buffer, $subject, $from_email, $email, $text = "На са
  * @param $charset 
  * @return string
  */
-function mime_encode($text, $charset = "windows-1251")
+function mime_encode($text, $charset = "[doc_charset]")
 {
 	return "=?" . $charset . "?B?" . base64_encode($text) . "?=";
 }
@@ -299,12 +299,14 @@ HTML;
 
 } else {
 	@rename(ROOT_DIR.$config['scanfile'].".tmp",ROOT_DIR.$config['scanfile']);
+	echo "<div style=\"background-color:#ecf0f1;font:normal 16px 'Trebuchet MS',Arial,sans-serif;color:#7f8c8d;margin:0 auto;max-width:800px; padding:20px;\">";
 	if (file_exists(ROOT_DIR.$config['scanfile'])) {
-		echo "\n\n<br/><br/>Файл снимка успешно создан ".date("Y-m-d в H:i:s");
-		echo "\n<br/>Время выполнения: ".(microtime(true)-$time_start)." сек.";
+		echo "<h2 style=\"font:normal 22px 'Trebuchet MS',Arial,sans-serif;color:#16a085;padding:10px 0; margin:0;\">Файл снимка успешно создан ".date("Y-m-d в H:i:s")."</h2>";
+		echo "Время выполнения: ".round(microtime(true)-$time_start,4)." сек.";
 	} else {
-		echo "Файл снимка не создан! Возможно не хватает прав. Установите на папку, содержащую снимок права на запись (CHMOD 777). Если после установки нужных прав это сообщение появляется вновь - обратитесь за помошью на сайт <a href='http://antishell.ru/' target='_blank'>antishell.ru</a>";
+		echo "<h2 style=\"font:normal 22px 'Trebuchet MS',Arial,sans-serif;color:#c0392b;padding:10px 0; margin:0;\">Файл снимка не создан!</h2> Возможные причины: <br />- <b>Не хватает прав.</b> Установите на папку, содержащую снимок права на запись (CHMOD 777). <br />- <b>Неверный путь к корню сайта.</b> Откройте файл скрипта и отредактируйте настройки в ручную, либо запустите устаовку ещё раз. <br />- <b>Особенности хостинга или распределения прав пользователей.</b> Обратитесь за помошью в службу технической поддержки хостинга или на сайт <a href='http://antishell.ru/' target='_blank'>antishell.ru</a> (будьте готовы дать FTP-доступ к папке со скриптом и папке со снимком)";
 	}
+	echo "</div>";
 }
 
 @rename(ROOT_DIR.$config['scanfile'].".tmp",ROOT_DIR.$config['scanfile']);
