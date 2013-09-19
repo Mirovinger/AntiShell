@@ -103,7 +103,7 @@ define('DOC_CHARSET', 'utf-8');        	// Удалить, если сайт в 
 		// Ветка на гитхабе
 		$github = 'https://raw.github.com/pafnuty/AntiShell/master/';
 
-		$ver = file_get_contents($github.'verdion_id.json');
+		$ver = file_get_contents($github.'version_id.json');
 		if ($ver) {
 			$version = json_decode($ver, true);
 		} 

@@ -74,13 +74,7 @@ $config['skipdir']	= str2array($config['skipdir']);
 
 $time_start  = microtime(true);
 
-
-// $root        = explode($_SERVER['HTTP_HOST'], dirname(__FILE__));
-// $script_path = array_pop($root);
-// $root_dir    = implode($_SERVER['HTTP_HOST'], $root) . $_SERVER['HTTP_HOST'];
 define('ROOT_DIR', '[root_dir]');
-// unset($root_dir);
-
 
 /**
  * Преобразуем строку в массив
@@ -119,7 +113,8 @@ function do_scan($dir, $subdir = '')
 			if (is_dir($file)) {
 				$scan = do_scan($dir, $subdir . '/' . $f, $scan);
 			} else {
-				$ext = array_pop(explode(".", $f));
+				$ext = pathinfo($f, PATHINFO_EXTENSION);
+
 				if ($config['skipfile'] AND (in_array($ext, $config['skipfile']) OR in_array($f, $config['skipfile'])))
 					continue;
 				$scan[] = $file . "|" . filectime($file) . "|" . md5($file . filesize($file));
@@ -129,10 +124,13 @@ function do_scan($dir, $subdir = '')
 	return $scan;
 }
 /**
- * Отправка уведомления на email
- * @param string $buffer - что отправляем
- * @param $subject - Тема сообщения
- * @return type
+ * Отправка email
+ * @param $buffer - текст сообщения
+ * @param $subject - имя отправителя (берётся из имени сайта)
+ * @param $from_email - email отправителя
+ * @param $email - email получателя
+ * @param $text - тема сообщения
+ * @return отправленное мыло
  */
 function mailfromsite($buffer, $subject, $from_email, $email, $text = "На сайте изменены файлы")
 {
@@ -150,7 +148,8 @@ function mailfromsite($buffer, $subject, $from_email, $email, $text = "На са
 	$headers .= "Content-Transfer-Encoding: 8bit\r\n";
 	$headers .= "X-Priority: 1 (Highest)";
 
-	return mail($email, mime_encode($text), $buffer, $headers);
+	$mail_send = mail($email, mime_encode($text), $buffer, $headers);
+	return $mail_send;
 }
 /**
  * Преобразование кодировки в кодировку )))
@@ -231,7 +230,8 @@ if (file_exists(ROOT_DIR . $config['scanfile'])) {
 	$i_del = 0;
 	foreach ($edit_diff as $e) {
 		$e = explode("|", $e);
-		$f = array_pop(explode(ROOT_DIR, $e[0]));
+		$_f = explode(ROOT_DIR, $e[0]);
+		$f = array_pop($_f);
 		$d = date("Y-m-d H:i:s", $e[1]);
 		if (strpos($ioscan, $e[0]) !== false) {
 			$edit[$f] = listStyler('change', $d, $f, $config['icon_url']);
@@ -245,7 +245,8 @@ if (file_exists(ROOT_DIR . $config['scanfile'])) {
 	$del_diff = array_diff($oscan, $scan);
 	foreach ($del_diff as $e) {
 		$e = explode("|", $e);
-		$f = array_pop(explode(ROOT_DIR, $e[0]));
+		$_f = explode(ROOT_DIR, $e[0]);
+		$f = array_pop($_f);
 		$d = date("Y-m-d H:i:s", $e[1]);
 		if (strpos($iscan, $e[0]) === false) {
 			$edit[$f] = listStyler('del', $d, $f, $config['icon_url']);
@@ -291,7 +292,8 @@ HTML;
 
 		mailfromsite($logs, $config['sitename'], $config['from_email'], $config['email']);
 	} else 
-		$logs = "Файлы не менялись";
+		$logs = "<div style=\"background-color:#ecf0f1;font:normal 16px 'Trebuchet MS',Arial,sans-serif;color:#7f8c8d;margin:0 auto;max-width:800px; padding:20px;\"><h2 style=\"font:normal 22px 'Trebuchet MS',Arial,sans-serif;color:#16a085;padding:10px 0; margin:0; text-align: center;\">Файлы не менялись. Всё ок!</h2></div>";
+
 
 	if($config['showtext']) 
 		echo $logs;
