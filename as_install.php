@@ -1,27 +1,24 @@
 <?php
 /**
- * В зависимости от кодировки вашего сайта нужно удалить лишнюю строку.
- * Если Ваш сайт работает в кодровке windows-1251 - удалите строку, содержащую запись utf-8
- * Если сайт в utf-8 - удалите строку содержащую запись windows-1251
- * Удалите лишнюю строку:
- */
+ ******************* ВНИМАНИЕ! ******************
+ * Если Ваш сайт работает в кодровке windows-1251
+ * необходимо раскомментировать строку ниже (убрать два слеша в начале строки) */
 
-define('DOC_CHARSET', 'windows-1251'); 	// Удалить, если сайт в UTF-8
-define('DOC_CHARSET', 'utf-8');        	// Удалить, если сайт в windows-1251
 
-/**
- * Дальше трогать не нужно
- */
+// define('AS_CHARSET', 'windows-1251');
 
+
+
+/* Дальше трогать ничего не нужно, если точно не знаете, что делаете! */
+
+
+// Тут мы проверяем задана ли константа кодировки, если нет - значит будет utf-8
+if (!defined('AS_CHARSET'))	define('AS_CHARSET', 'utf-8');
 ?>
 <!DOCTYPE html>
-<!--[if lt IE 7]>      <html class="lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
-<!--[if IE 7]>         <html class="lt-ie9 lt-ie8"> <![endif]-->
-<!--[if IE 8]>         <html class="lt-ie9"> <![endif]-->
-<!--[if gt IE 8]><!--> <html> <!--<![endif]-->
-
+<html>
 <head>
-	<meta charset="<?=DOC_CHARSET?>">
+	<meta charset="<?=AS_CHARSET?>">
 	<title>Установка AntiShell</title>
 	<meta name="viewport" content="width=device-width">
 	<link href="http://fonts.googleapis.com/css?family=Ubuntu+Condensed&subset=latin,cyrillic" rel="stylesheet">
@@ -71,8 +68,6 @@ define('DOC_CHARSET', 'utf-8');        	// Удалить, если сайт в 
 		.clearfix:after {clear: both;}
 		.clearfix {*zoom: 1;} 
 	</style>
-	<!--[if IE]><script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
-
 </head>
 <body>
 	<header>
@@ -91,8 +86,7 @@ define('DOC_CHARSET', 'utf-8');        	// Удалить, если сайт в 
 		?>
 
 	</section> 	
-	<p>Установщик подготовил: <a href="http://pafnuty.name/" target="_blank">ПафНутиЙ</a></p>
-	<p>Код скрипта подготовил: <a href="http://sandev.pro/" target="_blank">Sander</a></p>
+	<p><a href="http:antishell.ru/" target="_blank">Информация об авторах скрипта</a></p>
 </body>
 </html>
 
@@ -101,7 +95,7 @@ define('DOC_CHARSET', 'utf-8');        	// Удалить, если сайт в 
 		$docroot = $_SERVER["DOCUMENT_ROOT"];
 		$output = '';
 		// Ветка на гитхабе
-		$github = 'https://raw.github.com/pafnuty/AntiShell/master/';
+		$github = 'https://raw.github.com/pafnuty/AntiShell/dev/';
 
 		$ver = file_get_contents($github.'version_id.json');
 		if ($ver) {
@@ -114,7 +108,7 @@ define('DOC_CHARSET', 'utf-8');        	// Удалить, если сайт в 
 			// Определяем переменные
 
 			$as = file_get_contents($github.'src/source.php');
-			if (DOC_CHARSET  == 'windows-1251') {
+			if (AS_CHARSET  == 'windows-1251') {
 				$as = iconv("utf-8", "windows-1251//IGNORE", $as);
 			}
 
@@ -151,7 +145,7 @@ define('DOC_CHARSET', 'utf-8');        	// Удалить, если сайт в 
 				$_POST['yourmail'],
 				($_POST['from']) ? $_POST['from'] : "",
 				$_POST['icon_url'],
-				DOC_CHARSET
+				AS_CHARSET
 				);
 			$as = str_replace($as_config_array, $as_config_values, $as);
 
@@ -243,8 +237,8 @@ HTML;
 
 				$buffer  = str_replace("\r", "", $buffer);
 				$headers = "From: " . $from . "\r\n";
-				$headers .= "X-Mailer: ANTI-SHELL\r\n";
-				$headers .= "Content-Type: text/html; charset=" . DOC_CHARSET . "\r\n";
+				$headers .= "X-Mailer: ANTISHELL\r\n";
+				$headers .= "Content-Type: text/html; charset=" . AS_CHARSET . "\r\n";
 				$headers .= "Content-Transfer-Encoding: 8bit\r\n";
 				$headers .= "X-Priority: 1 (Highest)";
 
@@ -257,7 +251,7 @@ HTML;
 			 * @param $charset 
 			 * @return string
 			 */
-			function mime_encode($text, $charset = DOC_CHARSET)
+			function mime_encode($text, $charset = AS_CHARSET)
 			{
 				return "=?" . $charset . "?B?" . base64_encode($text) . "?=";
 			}
@@ -389,10 +383,11 @@ HTML;
 					</div>
 
 					<div class="form-field clearfix">
-						<div class="lebel">Путь к иконкам-индикаторам</div>
+						<div class="lebel">Путь к иконкам-индикаторам 
+						<p><img src="https://raw.github.com/pafnuty/AntiShell/master/img/as_sprite.png" alt="Иконки по умолчанию"> &nbsp;</p></div>
 						<div class="control">
 							<input type="text" name="icon_url" value="{$github}img/as_sprite.png">
-							<small class="gray">Иконки-индикаторы отображаются для наглядности. Вы можете сохранить картинку с иконками себе на сайт и прописать полный путь к этой картинке.</small>
+							<small class="gray">Иконки-индикаторы отображаются для наглядности. Вы можете сохранить картинку (она слева) с иконками себе на сайт и прописать полный URL к этой картинке.</small>
 						</div>
 					</div>
 
