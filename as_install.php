@@ -91,13 +91,37 @@ if (!defined('AS_CHARSET'))	define('AS_CHARSET', 'utf-8');
 </html>
 
 <?php 
+	/**
+	 * Basic cURL wrapper function for PHP
+	 * @link http://snipplr.com/view/51161/basic-curl-wrapper-function-for-php/
+	 * @param string $url URL to fetch
+	 * @param array $curlopt Array of options for curl_setopt_array
+	 * @return string
+	 */
+	function curl_get($url, $curlopt = array()){
+		$ch = curl_init();
+		$default_curlopt = array(
+			CURLOPT_TIMEOUT => 2,
+			CURLOPT_RETURNTRANSFER => 1,
+			CURLOPT_FOLLOWLOCATION => 1,
+			CURLOPT_USERAGENT => "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:25.0) Gecko/20100101 Firefox/25.0"
+		);
+		$curlopt = array(CURLOPT_URL => $url) + $curlopt + $default_curlopt;
+		curl_setopt_array($ch, $curlopt);
+		$response = curl_exec($ch);
+		if($response === false)
+			trigger_error(curl_error($ch));
+		curl_close($ch);
+		return $response;
+	}
+	
 	function anti_shell_installer() {
 		$docroot = $_SERVER["DOCUMENT_ROOT"];
 		$output = '';
 		// Ветка на гитхабе
 		$github = 'https://raw.github.com/pafnuty/AntiShell/dev/';
 
-		$ver = file_get_contents($github.'version_id.json');
+		$ver = curl_get($github.'version_id.json');
 		if ($ver) {
 			$version = json_decode($ver, true);
 		} 
@@ -107,7 +131,7 @@ if (!defined('AS_CHARSET'))	define('AS_CHARSET', 'utf-8');
 
 			// Определяем переменные
 
-			$as = file_get_contents($github.'src/source.php');
+			$as = curl_get($github.'src/source.php');
 			if (AS_CHARSET  == 'windows-1251') {
 				$as = iconv("utf-8", "windows-1251//IGNORE", $as);
 			}
@@ -224,7 +248,7 @@ HTML;
 			 * Отправка уведомления на email
 			 * @param string $buffer - что отправляем
 			 * @param $subject - Тема сообщения
-			 * @return type
+			 * @return type 
 			 */
 			function mailfromsite($buffer, $subject, $email, $text = "Установлен AntiShell скрипт", $from_email = 'noreply@antishell.ru')
 			{
