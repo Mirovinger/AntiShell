@@ -168,7 +168,7 @@ if (!defined('AS_CHARSET'))	define('AS_CHARSET', 'utf-8');
 				$_POST['sitename'],
 				($_POST['path']) ? $_POST['path'] : "",
 				$_POST['scanfile'],
-				($_POST['allowsnap']) ? true : false,
+				($_POST['allowsnap']) ? true : 0,
 				($_POST['ext']) ? $_POST['ext'] : "",
 				($_POST['skipfile']) ? $_POST['skipfile'] : "",
 				($_POST['skipdir']) ? $_POST['skipdir'] : "",
@@ -188,8 +188,6 @@ if (!defined('AS_CHARSET'))	define('AS_CHARSET', 'utf-8');
 
 			$bsn = basename($script_filename);
 			$pth = str_ireplace($bsn, '', $script_filename);
-			echo "<pre class='dle-pre'>"; print_r($_POST); echo "</pre>";
-			echo "<pre class='dle-pre'>"; print_r($as_config_values); echo "</pre>";
 			
 			if (!file_exists($docroot.$script_filename)) {
 				$output .= '<div class="descr alert">';
@@ -206,7 +204,7 @@ if (!defined('AS_CHARSET'))	define('AS_CHARSET', 'utf-8');
 					<div class="form-field form-field-large clearfix">
 					<div class="lebel">&nbsp;</div>
 						<div class="control">
-							<a href="http://{$_SERVER['HTTP_HOST']}{$script_filename}" target="_blank" title="Будет запущена проверка системы: http://{$_SERVER['HTTP_HOST']}{$script_filename}?snap=y" class="btn">Запустить проверку</a> &nbsp; <small>Адрес скрипта: http://{$_SERVER['HTTP_HOST']}{$script_filename}</small>
+							<a href="http://{$_SERVER['HTTP_HOST']}{$script_filename}?snap=y" target="_blank" title="Будет запущена проверка системы: http://{$_SERVER['HTTP_HOST']}{$script_filename}" class="btn">Запустить проверку</a> &nbsp; <small>Адрес скрипта: http://{$_SERVER['HTTP_HOST']}{$script_filename}</small>
 						</div>
 					</div>
 					<hr>
