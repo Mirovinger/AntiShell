@@ -17,7 +17,7 @@
  * =============================================================================
  */ 
 
-// Нстройки скрипта
+/////////// Настройки скрипта ///////////
 $config = array(
 	// Вкл/выкл
 	// Настройка по большому счёту не нужная, но мало ли, вдруг нужно будет отрубить временно скрипт, тогда ставим 'on' => false;
@@ -29,7 +29,7 @@ $config = array(
 
 	// Корень сайта
 	'root_dir' => '[root_dir]',
-	
+
 	// Название сайта
 	// Будет указано в качестве имени автора письма
 	'sitename' => '[sitename]',
@@ -41,6 +41,11 @@ $config = array(
 	// Куда сохранять результат скана системы.
 	// Путь от корня сайта.
 	'scanfile' => '[scanfile]',
+
+	// Создавать снимок сразу по окочании сканирования
+	// Для отключения необходимо заменить на false
+	// Для ручного создания снимка при отключенном автоматическом создании нужно запустить скрипт с параметром snap=y (http://site.com/antishell.php?snap=y)
+	'allowsnap' => [allowsnap],
 	
 	// Список расширений файлов, которые необходимо проверять. '' - означает любые расширения. Расширения указывать без точек через запятую
 	// Например, 'php,cgi,pl,perl,php3,php4,php5,php6,tpl,js,htaccess,htm,html,css,swf,txt,db,lng',
@@ -48,6 +53,8 @@ $config = array(
 	
 	// Список расширений файлов, которые не надо учитывать при проверке. Расширения указывать без точек через запятую
 	// А также можно указывать имена файлов, которые тоже не надо учитывать. Например, 'skipfile' => 'index.php,jpg', - здесь не будут учитываться файлы с именами 'index.php' и все файлы с расширением JPG
+	// В этот список автоматически добавляется файл снимка.
+	// 'skipfile' => 'jpg,jpeg,gif,bmp,png,rar,zip,tmp,gz,xml,flv,exe,txt,doc,pdf,avi,mp3,mp4,wmv,m4v,m4a,mov,3gp,f4v,3gp,mpg,mpeg',
 	'skipfile' => '[skipfile]',
 	
 	// Список папок, которые не надо проверять. Путь указывается относительно значения переменной 'path'. Перечилять папки через запятую
@@ -55,6 +62,7 @@ $config = array(
 	'skipdir' => '[skipdir]',
 	
 	// Email, на который отправлять отчеты
+	// Можно указывать несколько адресов через запятую, на каждый адрес будет выслано отдельное письмо
 	'email' => '[email]',
 
 	// Email отправителя
@@ -68,33 +76,28 @@ $config = array(
 	// Можно скопировать файл себе на хостинг и вставить сылку на него сюда.
 	'icon_url' => '[icon_url]'
 );
+///////// Конец настроек скрипта /////////
 
 
 
 /**
- * Дальше ничего не трогать без соответствующих знаний!
+ * ВНИМАНИЕ!
+ * Если не знаете что делаете - не трогайте код ниже!
  */
 
 if(!$config['on']) die("Wat?");
+
+$config['makesnap'] = ($_GET['snap']) ? true : false ;
+
 $time_start  = microtime(true);
 
 class AntiShell {
-	// Тут читый паттерн singleton, объяснять нечегоб тупо взят из википедии)
+	// Тут читый паттерн singleton, объяснять нечего, тупо взят из википедии)
 	protected static $instance;
 	private function __construct() {} 
 	private function __clone() {} 
 	private function __wakeup() {} 
 
-	// А тут я не смог решить что лучше использовать иби не силён, был вот такой вариант ещё:
-	/*
-	static public function getInstance() {
-		if (is_null(self::$_instance)) {
-			self::$_instance = new self();
-		}
-		return self::$_instance;
-	}
-	*/
-	// Но в примере из википеди был этот, поэтому я не стал особо разбираться:
 	public static function getInstance() { 
 		if (!isset(self::$instance)) {
 			$class          = __CLASS__;
@@ -142,7 +145,7 @@ class AntiShell {
 		$this->config['ext']      = $this->str2array($this->config['ext']);
 		$this->config['skipfile'] = $this->str2array($this->config['skipfile'].','.basename($this->config['root_dir'].$this->config['scanfile']));
 		$this->config['skipdir']  = $this->str2array($this->config['skipdir']);
-		
+
 		// Запускаем канирование
 		$scan = $this->doScan($this->config['root_dir'] . $this->config['path']);
 
@@ -152,7 +155,6 @@ class AntiShell {
 		// Определяем выводимый контент и заголовок письа
 		$status = $makeFile['status'];
 		$allowMail = false;
-
 		// Разные статусы сканирования
 		switch ($status) {
 			case '1':
@@ -175,6 +177,7 @@ class AntiShell {
 				$allowMail = true;
 				break;
 		}
+
 		// Определяем, что будет в контенте
 		$content = $makeFile['text'].$this->showStat();
 
@@ -183,7 +186,10 @@ class AntiShell {
 
 		// Отправляем уведомление на почту.
 		if ($allowMail) {
-			$this->mailFromSite($output, $this->config['sitename'], $this->config['from_email'], $this->config['email'], $title);
+			$mailArr = $this->str2array($this->config['email']);
+			foreach ($mailArr as $_mail) {
+				$this->mailFromSite($output, $this->config['sitename'], $this->config['from_email'], $_mail, $title);
+			}
 		}
 
 		// Выводим результаты в браузер
@@ -230,7 +236,7 @@ class AntiShell {
 		$total_files = count($scan);
 		$tf_text     = $this->wordSpan($total_files, 'фай|л|ла|лов');
 
-		file_put_contents($this->config['root_dir'] . $this->config['scanfile'] . ".tmp", serialize($scan), LOCK_EX);
+		file_put_contents($this->config['root_dir'] . $this->config['scanfile'] . '.tmp', serialize($scan), LOCK_EX);
 		if (file_exists($this->config['root_dir'] . $this->config['scanfile'])) {
 			$oscan  = unserialize(file_get_contents($this->config['root_dir'] . $this->config['scanfile']));
 			$ioscan = implode("\n", $oscan);
@@ -241,8 +247,8 @@ class AntiShell {
 			$i_change  = 0;
 			$i_add     = 0;
 			$i_del     = 0;
-			foreach ($edit_diff as $e) {
-				$e = explode("|", $e);
+			foreach ($edit_diff as $_e) {
+				$e = explode("|", $_e);
 				$_f = explode($this->config['root_dir'], $e[0]);
 				$f = array_pop($_f);
 				$d = date("Y-m-d H:i:s", $e[1]);
@@ -256,8 +262,8 @@ class AntiShell {
 			}
 			
 			$del_diff = array_diff($oscan, $scan);
-			foreach ($del_diff as $e) {
-				$e  = explode("|", $e);
+			foreach ($del_diff as $_e) {
+				$e  = explode("|", $_e);
 				$_f = explode($this->config['root_dir'], $e[0]);
 				$f  = array_pop($_f);
 				$d  = date("Y-m-d H:i:s", $e[1]);
@@ -270,11 +276,12 @@ class AntiShell {
 			unset($edit_diff, $del_diff);
 			if ($edit) {
 				$editted		= count($edit);
-				$snap_date		= date("j.m.Y в H:i:s",filemtime($this->config['root_dir'].$this->config['scanfile'].".tmp"));
+				$snap_date		= date("j.m.Y в H:i:s",filemtime($this->config['root_dir'].$this->config['scanfile'].'.tmp'));
 				$logs			= implode("\n\t",$edit);
 				$i_change_text	= $this->wordSpan($i_change, 'фай|л изменён|ла изменено|лов изменено');
 				$i_add_text		= $this->wordSpan($i_add, 'фай|л добавлен|ла добавлено|лов добавлено');
 				$i_del_text		= $this->wordSpan($i_del, 'фай|л удалён|ла удалены|лов удалено');
+				$snap_info = ($this->config['makesnap'] || $this->config['allowsnap']) ? "<p>Снимок создан <b>{$snap_date}</b></p>" : "<p>Дата сканирования: <b>{$snap_date}</b></p>";
 
 				$makeFile['status'] = '1';
 				$makeFile['text'] = "<h1 style=\"font:normal 22px 'Trebuchet MS',Arial,sans-serif;color:#2980b9;padding:40px 10px 10px;text-align: center;\">{$this->config['sitename']} - Сканирование завершено</h1>
@@ -282,7 +289,7 @@ class AntiShell {
 					{$logs}
 				</ul>
 				<div style='color: #34495e; line-height: 22px !important; margin-left: 40px;'>
-					<p>Снимок создан <b>{$snap_date}</b></p>
+					{$snap_info}
 					<p>
 						Всего отсканировано <b>{$total_files}</b> {$tf_text}, из них:
 						<br>- <b>{$i_change}</b> {$i_change_text}
@@ -295,18 +302,21 @@ class AntiShell {
 				$makeFile['status'] = '2';
 				$makeFile['text'] = "<h1 style=\"font:normal 22px 'Trebuchet MS',Arial,sans-serif;color:#16a085;padding:40px 10px 10px;text-align: center;\">Файлы не менялись. Всё ок!</h1>"; 
 			}
-
-			@unlink($this->config['root_dir'].$this->config['scanfile']);
+			if ($this->config['makesnap'] || $this->config['allowsnap']) {
+				@unlink($this->config['root_dir'].$this->config['scanfile']);
+			}
 
 		} else {
-			@rename($this->config['root_dir'].$this->config['scanfile'].".tmp", $this->config['root_dir'].$this->config['scanfile']);
+			if ($this->config['makesnap'] || $this->config['allowsnap']) {
+				@rename($this->config['root_dir'].$this->config['scanfile'].'.tmp', $this->config['root_dir'].$this->config['scanfile']);
+			}
 			
 			if (file_exists($this->config['root_dir'].$this->config['scanfile'])) {
 				$makeFile['status'] = '3';
-				$makeFile['text'] = "<h1 style=\"font:normal 22px 'Trebuchet MS',Arial,sans-serif;color:#16a085;padding:40px 10px 10px;text-align: center;\">Файл снимка успешно создан ".date("Y-m-d в H:i:s")."</h1> <p style='color: #34495e; line-height: 22px !important; margin-left: 40px; '>В снимке содержится: <b>{$total_files}</b> {$tf_text}</p>";
+				$makeFile['text'] = "<h1 style=\"font:normal 22px 'Trebuchet MS',Arial,sans-serif;color:#16a085;padding:40px 10px 10px;text-align: center;\">{$this->config['sitename']} - Файл снимка успешно создан ".date("Y-m-d в H:i:s")."</h1> <p style='color: #34495e; line-height: 22px !important; margin-left: 40px; '>В снимке содержится: <b>{$total_files}</b> {$tf_text}</p>";
 			} else {
 				$makeFile['status'] = '4';
-				$makeFile['text'] = "<h1 style=\"font:normal 22px 'Trebuchet MS',Arial,sans-serif;color:#c0392b;padding:40px 10px 10px;text-align: center;\">Файл снимка не создан!</h1>
+				$makeFile['text'] = "<h1 style=\"font:normal 22px 'Trebuchet MS',Arial,sans-serif;color:#c0392b;padding:40px 10px 10px;text-align: center;\">{$this->config['sitename']} - Файл снимка не создан!</h1>
 					<div style='color: #34495e; line-height: 22px !important; margin-left: 40px;'>
 						Возможные причины: 
 						<br />- <b>Не хватает прав.</b> Установите на папку, содержащую снимок права на запись (CHMOD 777). 
@@ -316,7 +326,12 @@ class AntiShell {
 			}
 		}
 
-		@rename($this->config['root_dir'].$this->config['scanfile'].".tmp",$this->config['root_dir'].$this->config['scanfile']);
+		if ($this->config['makesnap'] || $this->config['allowsnap']) {
+			@rename($this->config['root_dir'].$this->config['scanfile'].'.tmp', $this->config['root_dir'].$this->config['scanfile']);
+		}
+		if (!$this->config['makesnap'] && !$this->config['allowsnap']) {
+			@unlink($this->config['root_dir'].$this->config['scanfile'].'.tmp');
+		}
 
 		return $makeFile;
 	}
@@ -445,14 +460,12 @@ HTML;
 	 * @return html
 	 */
 	public function showOutput($output, $charset) {
-		// Не знаю нужна ли эта строка тут или можно и без неё обойтись...
+		$this->showHeader($charset); // Не знаю нужно ли это тут вообще
+		echo $output;	
+	}
+
+	public function showHeader($charset = 'utf-8') {
 		header('Content-type: text/html; charset='.$charset);
-
-		echo $output;
-
-		// Строки ниже для отладки при необходимости.
-		// echo "<pre>"; print_r($output); echo "</pre>"; 
-		// var_dump($output);		
 	}
 
 	/**
@@ -467,7 +480,7 @@ HTML;
 
 		$stat = '<div style="color: #34495e; line-height: 22px !important; margin-left: 40px; margin-top: 10px; border-top: 1px solid #bdc3c7;">
 			<p>Время выполнения: '.$time.'
-			<br />Затраты памяти (максимум): '.$memory.'</p>
+			<br />Затраты памяти <small>(максимальное потребление)</small>: '.$memory.'</p>
 		</div>';
 
 		return $stat;

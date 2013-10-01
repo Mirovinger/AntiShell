@@ -37,7 +37,7 @@ if (!defined('AS_CHARSET'))	define('AS_CHARSET', 'utf-8');
 		.logo{margin: 0 auto;display: block;}
 		a{color: #2980b9;}
 		a:hover{text-decoration: none;color: #c0392b;}
-		.btn, a.btn{line-height: 32px;font-size: 100%;margin: 0;vertical-align: baseline;*vertical-align: middle;cursor: pointer;*overflow: visible;background: #3498db;color: #ecf0f1;text-shadow: 0 1px 0 rgba(0, 0, 0, 0.2);border: 0;-webkit-border-radius: 3px;-moz-border-radius: 3px;border-radius: 3px;padding: 0 15px;display: inline-block; text-decoration: none; border-bottom: solid 3px #2980b9;}
+		.btn, a.btn{line-height: 32px;font-size: 100%;margin: 0;vertical-align: baseline;*vertical-align: middle;cursor: pointer;*overflow: visible;background: #3498db;color: #ecf0f1;text-shadow: 0 1px 0 rgba(0, 0, 0, 0.2);border: 0;border-radius: 3px;padding: 0 15px;display: inline-block; text-decoration: none; border-bottom: solid 3px #2980b9;}
 		.btn:hover, a.btn:hover, .btn.active{background: #e74c3c; border-bottom-color: #c0392b}
 		article,
 		.gray{color: #95a5a6;}
@@ -53,9 +53,13 @@ if (!defined('AS_CHARSET'))	define('AS_CHARSET', 'utf-8');
 		li.div, li li, li h3{color: #34495e;}
 		textarea{width: 800px;margin-bottom: 10px;vertical-align: top;-webkit-transition: height 0.2s;-moz-transition: height 0.2s;transition: height 0.2s;outline: none;display: block;color:#f39c12;padding: 5px 10px;font: normal 14px/20px Consolas,'Courier New',monospace;background-color: #2c3e50;white-space: pre;white-space: pre-wrap;word-break: break-all;word-wrap: break-word;text-shadow: none;border: none; border-left: solid 3px #f39c12; }
 		textarea:focus{background: #bdc3c7;border-color: #2980b9; color:#2c3e50;}
-		input[type="text"] {padding: 4px 10px;width: 250px;vertical-align: middle;height: 24px;line-height: 24px;border: solid 1px #95a5a6;display: inline-block;-webkit-border-radius: 3px;-moz-border-radius:3px;border-radius: 3px;}
+		input[type="text"] {padding: 4px 10px;width: 250px;vertical-align: middle;height: 24px;line-height: 24px;border: solid 1px #95a5a6;display: inline-block;border-radius: 3px;}
 		input[type="text"]:focus {border-color: #3498db;color:#2c3e50;outline: none;-webkit-box-shadow: 0 0 0 3px rgba(41, 128, 185, .5);-moz-box-shadow: 0 0 0 3px rgba(41, 128, 185, .5);box-shadow: 0 0 0 3px rgba(41, 128, 185, .5);}
 		form {margin-bottom: 10px;}
+		.checkbox { display:none; }
+		.checkbox + label { cursor: pointer; margin-top: 4px; display: inline-block; }
+		.checkbox + label span { display:inline-block; width:18px; height:18px; margin:-1px 4px 0 0; vertical-align:middle; background: #fff; cursor:pointer; border-radius: 4px; border: solid 2px #3498db; }
+		.checkbox:checked + label span { background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAICAYAAADN5B7xAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAIJJREFUeNpi+f//PwMhIL6wjQVITQDi10xEKBYEUtuAOBuIGVmgAnkgyZfxVY1oilWB1BYgVgPiRqB8A8iGfCBuAGGggnokxS5A6iSyYpA4I8gPQEkQB6YYxH4FxJOAmAVZMVwD1ERkTTCAohgE4J6GSjTiU4xiA5LbG5AMwAAAAQYAgOM4GiRnHpIAAAAASUVORK5CYII=') no-repeat 50% 50%; border-color: #16a085; }
 		.form-field {margin-bottom: 18px; margin-left: 90px;}
 		.lebel {float: left;width: 300px;padding-right: 10px;line-height: 32px; text-align: right;}
 		.control {width: 322px;float: left;}
@@ -71,7 +75,7 @@ if (!defined('AS_CHARSET'))	define('AS_CHARSET', 'utf-8');
 </head>
 <body>
 	<header>
-		<h1 class="ta-center"><big class="red">AntiShell</big></small> <br><span class="blue">Мастер установки скрипта для предупреждения взлома Вашего сайта</span></h1>
+		<h1 class="ta-center"><big class="red">AntiShell</big> <br><span class="blue">Мастер установки скрипта для предупреждения взлома Вашего сайта</span></h1>
 		<hr>
 	</header>
 	<section>  
@@ -148,6 +152,7 @@ if (!defined('AS_CHARSET'))	define('AS_CHARSET', 'utf-8');
 					'[sitename]',
 					'[path]'	,
 					'[scanfile]',
+					'[allowsnap]',
 					'[ext]'		,
 					'[skipfile]',
 					'[skipdir]'	,
@@ -163,6 +168,7 @@ if (!defined('AS_CHARSET'))	define('AS_CHARSET', 'utf-8');
 				$_POST['sitename'],
 				($_POST['path']) ? $_POST['path'] : "",
 				$_POST['scanfile'],
+				($_POST['allowsnap']) ? true : false,
 				($_POST['ext']) ? $_POST['ext'] : "",
 				($_POST['skipfile']) ? $_POST['skipfile'] : "",
 				($_POST['skipdir']) ? $_POST['skipdir'] : "",
@@ -182,11 +188,13 @@ if (!defined('AS_CHARSET'))	define('AS_CHARSET', 'utf-8');
 
 			$bsn = basename($script_filename);
 			$pth = str_ireplace($bsn, '', $script_filename);
+			echo "<pre class='dle-pre'>"; print_r($_POST); echo "</pre>";
+			echo "<pre class='dle-pre'>"; print_r($as_config_values); echo "</pre>";
 			
 			if (!file_exists($docroot.$script_filename)) {
 				$output .= '<div class="descr alert">';
 				$output .= '<h2 class="red">Скрипт не установлен!</h2>' ;
-				$output .= '<p>Мастер установки не смог получить доступ к файлу скрипта. Это значит что либо нет прав на запись, либо не верно казан путь к корню сайта.</p>' ;
+				$output .= '<p>Мастер установки не смог получить доступ к файлу скрипта. Это значит что либо нет прав на запись, либо не верно указан путь к корню сайта.</p>' ;
 				$output .= '<p>Установите на папку <b class="blue">'.$pth.'</b> права на запись: CHMOD 777. <br />И не забудьте вернуть обратно после успешной установки скрипта.</p>';
 				$output .= '<a class="btn" href="javascript:history.go(-1);" title="Вернуться назад">Вернуться назад</a>';
 				$output .= '</div>';
@@ -198,7 +206,7 @@ if (!defined('AS_CHARSET'))	define('AS_CHARSET', 'utf-8');
 					<div class="form-field form-field-large clearfix">
 					<div class="lebel">&nbsp;</div>
 						<div class="control">
-							<a href="http://{$_SERVER['HTTP_HOST']}{$script_filename}" target="_blank" title="Будет запущена проверка системы: http://{$_SERVER['HTTP_HOST']}{$script_filename}" class="btn">Запустить проверку</a> &nbsp; <small>Адрес скрипта: http://{$_SERVER['HTTP_HOST']}{$script_filename}</small>
+							<a href="http://{$_SERVER['HTTP_HOST']}{$script_filename}" target="_blank" title="Будет запущена проверка системы: http://{$_SERVER['HTTP_HOST']}{$script_filename}?snap=y" class="btn">Запустить проверку</a> &nbsp; <small>Адрес скрипта: http://{$_SERVER['HTTP_HOST']}{$script_filename}</small>
 						</div>
 					</div>
 					<hr>
@@ -363,7 +371,15 @@ HTML;
 							<input type="text" name="scanfile" value="/uploads/posts/snap.jpg">
 							<small class="red">Обязательно изменить путь, имя и расширение файла!</small> <br>
 							<small class="gray">Папка, в которой будет создаваться снимок, должна иметь CHMOD 777</small>
-						</div>
+						</div>						
+					</div>
+
+					<div class="form-field clearfix">
+						<div class="lebel">Автоматическое создание снимка</div>
+						<div class="control">
+							<input type="checkbox" value="1" name="allowsnap" id="allowsnap" checked class="checkbox"><label for="allowsnap"><span></span> Да</label> <br>
+							<small class="gray">Если отключить автосоздание снимка, то результаты сканирования не буду записаны в файл. Для создания снимка в этом случаи необходимо запускать скрипт с параметром snap=y (например: http://antishell.php?snap=y)</small>
+						</div>						
 					</div>
 
 					<div class="form-field clearfix">
@@ -408,7 +424,8 @@ HTML;
 
 					<div class="form-field clearfix">
 						<div class="lebel">Путь к иконкам-индикаторам 
-						<p><img src="https://raw.github.com/pafnuty/AntiShell/master/img/as_sprite.png" alt="Иконки по умолчанию"> &nbsp;</p></div>
+							<p><img src="https://raw.github.com/pafnuty/AntiShell/master/img/as_sprite.png" alt="Иконки по умолчанию"> &nbsp;</p>
+						</div>
 						<div class="control">
 							<input type="text" name="icon_url" value="{$github}img/as_sprite.png">
 							<small class="gray">Иконки-индикаторы отображаются для наглядности. Вы можете сохранить картинку (она слева) с иконками себе на сайт и прописать полный URL к этой картинке.</small>
