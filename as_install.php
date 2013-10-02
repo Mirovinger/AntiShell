@@ -1,27 +1,24 @@
 <?php
 /**
- * В зависимости от кодировки вашего сайта нужно удалить лишнюю строку.
- * Если Ваш сайт работает в кодровке windows-1251 - удалите строку, содержащую запись utf-8
- * Если сайт в utf-8 - удалите строку содержащую запись windows-1251
- * Удалите лишнюю строку:
- */
+ ******************* ВНИМАНИЕ! ******************
+ * Если Ваш сайт работает в кодровке windows-1251
+ * необходимо раскомментировать строку ниже (убрать два слеша в начале строки) */
 
-define('DOC_CHARSET', 'windows-1251'); 	// Удалить, если сайт в UTF-8
-define('DOC_CHARSET', 'utf-8');        	// Удалить, если сайт в windows-1251
 
-/**
- * Дальше трогать не нужно
- */
+// define('AS_CHARSET', 'windows-1251');
 
+
+
+/* Дальше трогать ничего не нужно, если точно не знаете, что делаете! */
+
+
+// Тут мы проверяем задана ли константа кодировки, если нет - значит будет utf-8
+if (!defined('AS_CHARSET'))	define('AS_CHARSET', 'utf-8');
 ?>
 <!DOCTYPE html>
-<!--[if lt IE 7]>      <html class="lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
-<!--[if IE 7]>         <html class="lt-ie9 lt-ie8"> <![endif]-->
-<!--[if IE 8]>         <html class="lt-ie9"> <![endif]-->
-<!--[if gt IE 8]><!--> <html> <!--<![endif]-->
-
+<html>
 <head>
-	<meta charset="<?=DOC_CHARSET?>">
+	<meta charset="<?=AS_CHARSET?>">
 	<title>Установка AntiShell</title>
 	<meta name="viewport" content="width=device-width">
 	<link href="http://fonts.googleapis.com/css?family=Ubuntu+Condensed&subset=latin,cyrillic" rel="stylesheet">
@@ -40,7 +37,7 @@ define('DOC_CHARSET', 'utf-8');        	// Удалить, если сайт в 
 		.logo{margin: 0 auto;display: block;}
 		a{color: #2980b9;}
 		a:hover{text-decoration: none;color: #c0392b;}
-		.btn, a.btn{line-height: 32px;font-size: 100%;margin: 0;vertical-align: baseline;*vertical-align: middle;cursor: pointer;*overflow: visible;background: #3498db;color: #ecf0f1;text-shadow: 0 1px 0 rgba(0, 0, 0, 0.2);border: 0;-webkit-border-radius: 3px;-moz-border-radius: 3px;border-radius: 3px;padding: 0 15px;display: inline-block; text-decoration: none; border-bottom: solid 3px #2980b9;}
+		.btn, a.btn{line-height: 32px;font-size: 100%;margin: 0;vertical-align: baseline;*vertical-align: middle;cursor: pointer;*overflow: visible;background: #3498db;color: #ecf0f1;text-shadow: 0 1px 0 rgba(0, 0, 0, 0.2);border: 0;border-radius: 3px;padding: 0 15px;display: inline-block; text-decoration: none; border-bottom: solid 3px #2980b9;}
 		.btn:hover, a.btn:hover, .btn.active{background: #e74c3c; border-bottom-color: #c0392b}
 		article,
 		.gray{color: #95a5a6;}
@@ -56,9 +53,13 @@ define('DOC_CHARSET', 'utf-8');        	// Удалить, если сайт в 
 		li.div, li li, li h3{color: #34495e;}
 		textarea{width: 800px;margin-bottom: 10px;vertical-align: top;-webkit-transition: height 0.2s;-moz-transition: height 0.2s;transition: height 0.2s;outline: none;display: block;color:#f39c12;padding: 5px 10px;font: normal 14px/20px Consolas,'Courier New',monospace;background-color: #2c3e50;white-space: pre;white-space: pre-wrap;word-break: break-all;word-wrap: break-word;text-shadow: none;border: none; border-left: solid 3px #f39c12; }
 		textarea:focus{background: #bdc3c7;border-color: #2980b9; color:#2c3e50;}
-		input[type="text"] {padding: 4px 10px;width: 250px;vertical-align: middle;height: 24px;line-height: 24px;border: solid 1px #95a5a6;display: inline-block;-webkit-border-radius: 3px;-moz-border-radius:3px;border-radius: 3px;}
+		input[type="text"] {padding: 4px 10px;width: 250px;vertical-align: middle;height: 24px;line-height: 24px;border: solid 1px #95a5a6;display: inline-block;border-radius: 3px;}
 		input[type="text"]:focus {border-color: #3498db;color:#2c3e50;outline: none;-webkit-box-shadow: 0 0 0 3px rgba(41, 128, 185, .5);-moz-box-shadow: 0 0 0 3px rgba(41, 128, 185, .5);box-shadow: 0 0 0 3px rgba(41, 128, 185, .5);}
 		form {margin-bottom: 10px;}
+		.checkbox { display:none; }
+		.checkbox + label { cursor: pointer; margin-top: 4px; display: inline-block; }
+		.checkbox + label span { display:inline-block; width:18px; height:18px; margin:-1px 4px 0 0; vertical-align:middle; background: #fff; cursor:pointer; border-radius: 4px; border: solid 2px #3498db; }
+		.checkbox:checked + label span { background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAICAYAAADN5B7xAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAIJJREFUeNpi+f//PwMhIL6wjQVITQDi10xEKBYEUtuAOBuIGVmgAnkgyZfxVY1oilWB1BYgVgPiRqB8A8iGfCBuAGGggnokxS5A6iSyYpA4I8gPQEkQB6YYxH4FxJOAmAVZMVwD1ERkTTCAohgE4J6GSjTiU4xiA5LbG5AMwAAAAQYAgOM4GiRnHpIAAAAASUVORK5CYII=') no-repeat 50% 50%; border-color: #16a085; }
 		.form-field {margin-bottom: 18px; margin-left: 90px;}
 		.lebel {float: left;width: 300px;padding-right: 10px;line-height: 32px; text-align: right;}
 		.control {width: 322px;float: left;}
@@ -71,12 +72,10 @@ define('DOC_CHARSET', 'utf-8');        	// Удалить, если сайт в 
 		.clearfix:after {clear: both;}
 		.clearfix {*zoom: 1;} 
 	</style>
-	<!--[if IE]><script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
-
 </head>
 <body>
 	<header>
-		<h1 class="ta-center"><big class="red">AntiShell</big></small> <br><span class="blue">Мастер установки скрипта для предупреждения взлома Вашего сайта</span></h1>
+		<h1 class="ta-center"><big class="red">AntiShell</big> <br><span class="blue">Мастер установки скрипта для предупреждения взлома Вашего сайта</span></h1>
 		<hr>
 	</header>
 	<section>  
@@ -91,19 +90,42 @@ define('DOC_CHARSET', 'utf-8');        	// Удалить, если сайт в 
 		?>
 
 	</section> 	
-	<p>Установщик подготовил: <a href="http://pafnuty.name/" target="_blank">ПафНутиЙ</a></p>
-	<p>Код скрипта подготовил: <a href="http://sandev.pro/" target="_blank">Sander</a></p>
+	<p><a href="http://antishell.ru/authors/" target="_blank">Информация об авторах скрипта</a></p>
 </body>
 </html>
 
 <?php 
+	/**
+	 * Basic cURL wrapper function for PHP
+	 * @link http://snipplr.com/view/51161/basic-curl-wrapper-function-for-php/
+	 * @param string $url URL to fetch
+	 * @param array $curlopt Array of options for curl_setopt_array
+	 * @return string
+	 */
+	function curl_get($url, $curlopt = array()){
+		$ch = curl_init();
+		$default_curlopt = array(
+			CURLOPT_TIMEOUT => 15,
+			CURLOPT_RETURNTRANSFER => 1,
+			// CURLOPT_FOLLOWLOCATION => 1,
+			CURLOPT_USERAGENT => "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:25.0) Gecko/20100101 Firefox/25.0"
+		);
+		$curlopt = array(CURLOPT_URL => $url) + $curlopt + $default_curlopt;
+		curl_setopt_array($ch, $curlopt);
+		$response = curl_exec($ch);
+		if($response === false)
+			trigger_error(curl_error($ch));
+		curl_close($ch);
+		return $response;
+	}
+	
 	function anti_shell_installer() {
 		$docroot = $_SERVER["DOCUMENT_ROOT"];
 		$output = '';
 		// Ветка на гитхабе
 		$github = 'https://raw.github.com/pafnuty/AntiShell/master/';
 
-		$ver = file_get_contents($github.'version_id.json');
+		$ver = curl_get($github.'version_id.json');
 		if ($ver) {
 			$version = json_decode($ver, true);
 		} 
@@ -113,8 +135,8 @@ define('DOC_CHARSET', 'utf-8');        	// Удалить, если сайт в 
 
 			// Определяем переменные
 
-			$as = file_get_contents($github.'src/source.php');
-			if (DOC_CHARSET  == 'windows-1251') {
+			$as = curl_get($github.'src/source.php');
+			if (AS_CHARSET  == 'windows-1251') {
 				$as = iconv("utf-8", "windows-1251//IGNORE", $as);
 			}
 
@@ -130,6 +152,7 @@ define('DOC_CHARSET', 'utf-8');        	// Удалить, если сайт в 
 					'[sitename]',
 					'[path]'	,
 					'[scanfile]',
+					'[allowsnap]',
 					'[ext]'		,
 					'[skipfile]',
 					'[skipdir]'	,
@@ -145,13 +168,14 @@ define('DOC_CHARSET', 'utf-8');        	// Удалить, если сайт в 
 				$_POST['sitename'],
 				($_POST['path']) ? $_POST['path'] : "",
 				$_POST['scanfile'],
+				($_POST['allowsnap']) ? true : 0,
 				($_POST['ext']) ? $_POST['ext'] : "",
 				($_POST['skipfile']) ? $_POST['skipfile'] : "",
 				($_POST['skipdir']) ? $_POST['skipdir'] : "",
 				$_POST['yourmail'],
 				($_POST['from']) ? $_POST['from'] : "",
 				$_POST['icon_url'],
-				DOC_CHARSET
+				AS_CHARSET
 				);
 			$as = str_replace($as_config_array, $as_config_values, $as);
 
@@ -168,7 +192,7 @@ define('DOC_CHARSET', 'utf-8');        	// Удалить, если сайт в 
 			if (!file_exists($docroot.$script_filename)) {
 				$output .= '<div class="descr alert">';
 				$output .= '<h2 class="red">Скрипт не установлен!</h2>' ;
-				$output .= '<p>Мастер установки не смог получить доступ к файлу скрипта. Это значит что либо нет прав на запись, либо не верно казан путь к корню сайта.</p>' ;
+				$output .= '<p>Мастер установки не смог получить доступ к файлу скрипта. Это значит что либо нет прав на запись, либо не верно указан путь к корню сайта.</p>' ;
 				$output .= '<p>Установите на папку <b class="blue">'.$pth.'</b> права на запись: CHMOD 777. <br />И не забудьте вернуть обратно после успешной установки скрипта.</p>';
 				$output .= '<a class="btn" href="javascript:history.go(-1);" title="Вернуться назад">Вернуться назад</a>';
 				$output .= '</div>';
@@ -180,7 +204,7 @@ define('DOC_CHARSET', 'utf-8');        	// Удалить, если сайт в 
 					<div class="form-field form-field-large clearfix">
 					<div class="lebel">&nbsp;</div>
 						<div class="control">
-							<a href="http://{$_SERVER['HTTP_HOST']}{$script_filename}" target="_blank" title="Будет запущена проверка системы: http://{$_SERVER['HTTP_HOST']}{$script_filename}" class="btn">Запустить проверку</a> &nbsp; <small>Адрес скрипта: http://{$_SERVER['HTTP_HOST']}{$script_filename}</small>
+							<a href="http://{$_SERVER['HTTP_HOST']}{$script_filename}?snap=y" target="_blank" title="Будет запущена проверка системы: http://{$_SERVER['HTTP_HOST']}{$script_filename}" class="btn">Запустить проверку</a> &nbsp; <small>Адрес скрипта: http://{$_SERVER['HTTP_HOST']}{$script_filename}</small>
 						</div>
 					</div>
 					<hr>
@@ -227,10 +251,29 @@ HTML;
 		// Если через $_POST передаётся параметр sendmail, отправляем соответствующее уведомление на почту.
 		elseif (!empty($_POST['sendmail'])) {
 			/**
+			 * Преобразуем строку в массив
+			 * @param string $array - входящая строка
+			 * @param $delimetr - разделитель массива
+			 * @return array()
+			 */
+			 function str2array($array, $delimetr = ',') {
+				if (!$array OR $array == '*')
+					return false;
+				$earr = explode($delimetr, $array);
+				$narr = array();
+				foreach ($earr as $v) {
+					$v = trim($v);
+					if ($v)
+						$narr[] = $v;
+				}
+				return $narr;
+			}
+
+			/**
 			 * Отправка уведомления на email
 			 * @param string $buffer - что отправляем
 			 * @param $subject - Тема сообщения
-			 * @return type
+			 * @return type 
 			 */
 			function mailfromsite($buffer, $subject, $email, $text = "Установлен AntiShell скрипт", $from_email = 'noreply@antishell.ru')
 			{
@@ -243,8 +286,8 @@ HTML;
 
 				$buffer  = str_replace("\r", "", $buffer);
 				$headers = "From: " . $from . "\r\n";
-				$headers .= "X-Mailer: ANTI-SHELL\r\n";
-				$headers .= "Content-Type: text/html; charset=" . DOC_CHARSET . "\r\n";
+				$headers .= "X-Mailer: ANTISHELL\r\n";
+				$headers .= "Content-Type: text/html; charset=" . AS_CHARSET . "\r\n";
 				$headers .= "Content-Transfer-Encoding: 8bit\r\n";
 				$headers .= "X-Priority: 1 (Highest)";
 
@@ -257,7 +300,7 @@ HTML;
 			 * @param $charset 
 			 * @return string
 			 */
-			function mime_encode($text, $charset = DOC_CHARSET)
+			function mime_encode($text, $charset = AS_CHARSET)
 			{
 				return "=?" . $charset . "?B?" . base64_encode($text) . "?=";
 			}
@@ -273,13 +316,15 @@ HTML;
 			<p>Команда php: <span style="display:inline-block; background: #FFFFBF; color: #FF0000; padding: 0 4px;">{$_POST['phplink']}</span></p>
 			<p>Не забывайте, что пути к модулям wget и php могут отличаться от приведённых т.к. они лишь для примера.</p>
 			----------------------------------
-			<p>По вопросам работы скрипта обращайтесь а сайт <a href="http://antishell.ru/" target="_blank">antishell.ru</a></p>
+			<p>По вопросам работы скрипта обращайтесь на сайт <a href="http://antishell.ru/" target="_blank">antishell.ru</a> или оставляйте тиккет на <a href="https://github.com/pafnuty/AntiShell/issues" target="_blank">GitHub</a></p>
 		</div>
 	</div>
 </body>
 HTML;
-
-			$sendMail = mailfromsite($mail_text, $_POST['sn'], $_POST['ym']);
+			$_email = str2array($_POST['ym']);
+			foreach ($_email as $eml) {
+				$sendMail = mailfromsite($mail_text, $_POST['sn'], $eml);
+			}
 			echo "<div class='descr'>";
 			if ($sendMail) {
 				echo "<h2>Вам на почту <span class=\"blue\">".$_POST['ym']."</span> выслано письмо.</h2>";
@@ -345,7 +390,15 @@ HTML;
 							<input type="text" name="scanfile" value="/uploads/posts/snap.jpg">
 							<small class="red">Обязательно изменить путь, имя и расширение файла!</small> <br>
 							<small class="gray">Папка, в которой будет создаваться снимок, должна иметь CHMOD 777</small>
-						</div>
+						</div>						
+					</div>
+
+					<div class="form-field clearfix">
+						<div class="lebel">Автоматическое создание снимка</div>
+						<div class="control">
+							<input type="checkbox" value="1" name="allowsnap" id="allowsnap" checked class="checkbox"><label for="allowsnap"><span></span> Да</label> <br>
+							<small class="gray">Если отключить автосоздание снимка, то результаты сканирования не буду записаны в файл. Для создания снимка в этом случаи необходимо запускать скрипт с параметром snap=y (например: http://antishell.php?snap=y)</small>
+						</div>						
 					</div>
 
 					<div class="form-field clearfix">
@@ -389,10 +442,12 @@ HTML;
 					</div>
 
 					<div class="form-field clearfix">
-						<div class="lebel">Путь к иконкам-индикаторам</div>
+						<div class="lebel">Путь к иконкам-индикаторам 
+							<p><img src="https://raw.github.com/pafnuty/AntiShell/master/img/as_sprite.png" alt="Иконки по умолчанию"> &nbsp;</p>
+						</div>
 						<div class="control">
 							<input type="text" name="icon_url" value="{$github}img/as_sprite.png">
-							<small class="gray">Иконки-индикаторы отображаются для наглядности. Вы можете сохранить картинку с иконками себе на сайт и прописать полный путь к этой картинке.</small>
+							<small class="gray">Иконки-индикаторы отображаются для наглядности. Вы можете сохранить картинку (она слева) с иконками себе на сайт и прописать полный URL к этой картинке.</small>
 						</div>
 					</div>
 
