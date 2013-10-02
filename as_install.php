@@ -123,7 +123,7 @@ if (!defined('AS_CHARSET'))	define('AS_CHARSET', 'utf-8');
 		$docroot = $_SERVER["DOCUMENT_ROOT"];
 		$output = '';
 		// Ветка на гитхабе
-		$github = 'https://raw.github.com/pafnuty/AntiShell/dev/';
+		$github = 'https://raw.github.com/pafnuty/AntiShell/master/';
 
 		$ver = curl_get($github.'version_id.json');
 		if ($ver) {
