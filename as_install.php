@@ -408,7 +408,7 @@ HTML;
 						<div class="lebel">Email для уведомлений</div>
 						<div class="control">
 							<input type="text" name="yourmail" value="$site_mail">
-							<small class="gray">Адрес почты, на который будут приходить уведомлеия.</small>
+							<small class="gray">Адрес почты, на который будут приходить уведомления. Можно указать несколько адресов через запятую.</small>
 						</div>
 					</div>
 

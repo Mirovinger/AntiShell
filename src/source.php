@@ -187,8 +187,9 @@ class AntiShell {
 		// Отправляем уведомление на почту.
 		if ($allowMail) {
 			$mailArr = $this->str2array($this->config['email']);
+			$fromMailArr = $this->str2array($this->config['from_email']);
 			foreach ($mailArr as $_mail) {
-				$this->mailFromSite($output, $this->config['sitename'], $this->config['from_email'], $_mail, $title);
+				$this->mailFromSite($output, $this->config['sitename'], $fromMailArr[0], $_mail, $title);
 			}
 		}
 
