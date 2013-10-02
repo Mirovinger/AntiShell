@@ -90,7 +90,7 @@ if (!defined('AS_CHARSET'))	define('AS_CHARSET', 'utf-8');
 		?>
 
 	</section> 	
-	<p><a href="http:antishell.ru/" target="_blank">Информация об авторах скрипта</a></p>
+	<p><a href="http://antishell.ru/authors/" target="_blank">Информация об авторах скрипта</a></p>
 </body>
 </html>
 
@@ -316,7 +316,7 @@ HTML;
 			<p>Команда php: <span style="display:inline-block; background: #FFFFBF; color: #FF0000; padding: 0 4px;">{$_POST['phplink']}</span></p>
 			<p>Не забывайте, что пути к модулям wget и php могут отличаться от приведённых т.к. они лишь для примера.</p>
 			----------------------------------
-			<p>По вопросам работы скрипта обращайтесь а сайт <a href="http://antishell.ru/" target="_blank">antishell.ru</a></p>
+			<p>По вопросам работы скрипта обращайтесь на сайт <a href="http://antishell.ru/" target="_blank">antishell.ru</a> или оставляйте тиккет на <a href="https://github.com/pafnuty/AntiShell/issues" target="_blank">GitHub</a></p>
 		</div>
 	</div>
 </body>
