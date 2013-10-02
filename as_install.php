@@ -251,6 +251,25 @@ HTML;
 		// Если через $_POST передаётся параметр sendmail, отправляем соответствующее уведомление на почту.
 		elseif (!empty($_POST['sendmail'])) {
 			/**
+			 * Преобразуем строку в массив
+			 * @param string $array - входящая строка
+			 * @param $delimetr - разделитель массива
+			 * @return array()
+			 */
+			 function str2array($array, $delimetr = ',') {
+				if (!$array OR $array == '*')
+					return false;
+				$earr = explode($delimetr, $array);
+				$narr = array();
+				foreach ($earr as $v) {
+					$v = trim($v);
+					if ($v)
+						$narr[] = $v;
+				}
+				return $narr;
+			}
+
+			/**
 			 * Отправка уведомления на email
 			 * @param string $buffer - что отправляем
 			 * @param $subject - Тема сообщения
@@ -302,8 +321,10 @@ HTML;
 	</div>
 </body>
 HTML;
-
-			$sendMail = mailfromsite($mail_text, $_POST['sn'], $_POST['ym']);
+			$_email = str2array($_POST['ym']);
+			foreach ($_email as $eml) {
+				$sendMail = mailfromsite($mail_text, $_POST['sn'], $eml);
+			}
 			echo "<div class='descr'>";
 			if ($sendMail) {
 				echo "<h2>Вам на почту <span class=\"blue\">".$_POST['ym']."</span> выслано письмо.</h2>";
@@ -408,7 +429,7 @@ HTML;
 						<div class="lebel">Email для уведомлений</div>
 						<div class="control">
 							<input type="text" name="yourmail" value="$site_mail">
-							<small class="gray">Адрес почты, на который будут приходить уведомления. Можно указать несколько адресов через запятую.</small>
+							<small class="gray">Адрес почты, на который будут приходить уведомлеия.</small>
 						</div>
 					</div>
 
