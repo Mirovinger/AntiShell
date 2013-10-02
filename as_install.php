@@ -105,9 +105,9 @@ if (!defined('AS_CHARSET'))	define('AS_CHARSET', 'utf-8');
 	function curl_get($url, $curlopt = array()){
 		$ch = curl_init();
 		$default_curlopt = array(
-			CURLOPT_TIMEOUT => 2,
+			CURLOPT_TIMEOUT => 15,
 			CURLOPT_RETURNTRANSFER => 1,
-			CURLOPT_FOLLOWLOCATION => 1,
+			// CURLOPT_FOLLOWLOCATION => 1,
 			CURLOPT_USERAGENT => "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:25.0) Gecko/20100101 Firefox/25.0"
 		);
 		$curlopt = array(CURLOPT_URL => $url) + $curlopt + $default_curlopt;
