@@ -103,20 +103,25 @@ if (!defined('AS_CHARSET'))	define('AS_CHARSET', 'utf-8');
 	 * @return string
 	 */
 	function curl_get($url, $curlopt = array()){
-		$ch = curl_init();
-		$default_curlopt = array(
-			CURLOPT_TIMEOUT => 15,
-			CURLOPT_RETURNTRANSFER => 1,
-			// CURLOPT_FOLLOWLOCATION => 1,
-			CURLOPT_USERAGENT => "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:25.0) Gecko/20100101 Firefox/25.0"
-		);
-		$curlopt = array(CURLOPT_URL => $url) + $curlopt + $default_curlopt;
-		curl_setopt_array($ch, $curlopt);
-		$response = curl_exec($ch);
-		if($response === false)
-			trigger_error(curl_error($ch));
-		curl_close($ch);
-		return $response;
+		if (function_exists('curl_version')) {
+			$ch = curl_init();
+			$default_curlopt = array(
+				CURLOPT_TIMEOUT => 15,
+				CURLOPT_RETURNTRANSFER => 1,
+				// CURLOPT_FOLLOWLOCATION => 1,
+				CURLOPT_SSL_VERIFYPEER => false,
+				CURLOPT_USERAGENT => "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:25.0) Gecko/20100101 Firefox/25.0"
+			);
+			$curlopt = array(CURLOPT_URL => $url) + $curlopt + $default_curlopt;
+			curl_setopt_array($ch, $curlopt);
+			$response = curl_exec($ch);
+			if($response === false)
+				trigger_error(curl_error($ch));
+			curl_close($ch);
+			return $response;
+		} else {
+			die('<div class="descr ta-center"><h2><span class="red">Внимание!</span> На сайте отключено расширение cURL для php</h2> <p>Включите cURL и попробуйте снова.</p></div>');
+		}	
 	}
 	
 	function anti_shell_installer() {
