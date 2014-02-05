@@ -87,7 +87,7 @@ $config = array(
 
 if(!$config['on']) die("Wat?");
 
-$config['makesnap'] = ($_GET['snap']) ? true : false ;
+$config['makesnap'] = (isset($_GET['snap'])) ? true : false ;
 
 $time_start  = microtime(true);
 
