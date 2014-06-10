@@ -74,7 +74,16 @@ $config = array(
 
 	// Путь к файлу с картинками-индикаторами
 	// Можно скопировать файл себе на хостинг и вставить сылку на него сюда.
-	'icon_url' => '[icon_url]'
+	'icon_url' => '[icon_url]',
+
+	// Разрешить отправку анонимной статистики
+	// Собирается статистика о следующих параметрах сканирования:
+	// - кол-во отсканированных файлов
+	// - кол-во изменёных файлов
+	// - кол-во удалённых файлов
+	// - время сканирования
+	// - версия скрипта (начная с v1.1.3)
+	'send_stat' => [send_stat]
 );
 ///////// Конец настроек скрипта /////////
 
@@ -92,13 +101,31 @@ $config['makesnap'] = (isset($_GET['snap'])) ? true : false ;
 $time_start  = microtime(true);
 
 class AntiShell {
+	/**
+	 * Оф.сайт скрипта
+	 * @var string
+	 */
+    public $url = "antishell.ru";
+
+    /**
+     * Версия скрипта
+     * @var string
+     */
+    public $version = "[version_id]";
+
+    /**
+     * Массив для записи статистики
+     * @var array
+     */
+    public $send_stat_data = array();
+
 	// Тут читый паттерн singleton, объяснять нечего, тупо взят из википедии)
 	protected static $instance;
-	private function __construct() {} 
-	private function __clone() {} 
-	private function __wakeup() {} 
+	private function __construct() {}
+	private function __clone() {}
+	private function __wakeup() {}
 
-	public static function getInstance() { 
+	public static function getInstance() {
 		if (!isset(self::$instance)) {
 			$class          = __CLASS__;
 			self::$instance = new $class();
@@ -108,7 +135,7 @@ class AntiShell {
 
 	/**
 	 * Конфигуратор
-	 * @param array $cfg 
+	 * @param array $cfg
 	 * @return array
 	 */
 	public function setConfig($cfg) {
@@ -181,6 +208,9 @@ class AntiShell {
 		// Определяем, что будет в контенте
 		$content = $makeFile['text'].$this->showStat();
 
+		if ($this->config['send_stat']) {
+			$this->sendStat($this->send_stat_data);
+		}
 		// Суём контент в шаблон для вывода
 		$output = $this->template($this->config['sitename'], $content);
 
@@ -195,7 +225,7 @@ class AntiShell {
 
 		// Выводим результаты в браузер
 		if ($this->config['showtext']) {
-			$this->showOutput($output, $this->config['charset']); 
+			$this->showOutput($output, $this->config['charset']);
 		}
 	}
 
@@ -242,7 +272,7 @@ class AntiShell {
 			$oscan  = unserialize(file_get_contents($this->config['root_dir'] . $this->config['scanfile']));
 			$ioscan = implode("\n", $oscan);
 			$iscan  = implode("\n", $scan);
-			
+
 			$edit_diff = array_diff($scan, $oscan);
 			$edit      = array();
 			$i_change  = 0;
@@ -261,7 +291,7 @@ class AntiShell {
 					$i_add++;
 				}
 			}
-			
+
 			$del_diff = array_diff($oscan, $scan);
 			foreach ($del_diff as $_e) {
 				$e  = explode("|", $_e);
@@ -301,7 +331,7 @@ class AntiShell {
 				</div>";
 			} else {
 				$makeFile['status'] = '2';
-				$makeFile['text'] = "<h1 style=\"font:normal 22px 'Trebuchet MS',Arial,sans-serif;color:#16a085;padding:40px 10px 10px;text-align: center;\">Файлы не менялись. Всё ок!</h1>"; 
+				$makeFile['text'] = "<h1 style=\"font:normal 22px 'Trebuchet MS',Arial,sans-serif;color:#16a085;padding:40px 10px 10px;text-align: center;\">Файлы не менялись. Всё ок!</h1>";
 			}
 			if ($this->config['makesnap'] || $this->config['allowsnap']) {
 				@unlink($this->config['root_dir'].$this->config['scanfile']);
@@ -311,7 +341,7 @@ class AntiShell {
 			if ($this->config['makesnap'] || $this->config['allowsnap']) {
 				@rename($this->config['root_dir'].$this->config['scanfile'].'.tmp', $this->config['root_dir'].$this->config['scanfile']);
 			}
-			
+
 			if (file_exists($this->config['root_dir'].$this->config['scanfile'])) {
 				$makeFile['status'] = '3';
 				$makeFile['text'] = "<h1 style=\"font:normal 22px 'Trebuchet MS',Arial,sans-serif;color:#16a085;padding:40px 10px 10px;text-align: center;\">{$this->config['sitename']} - Файл снимка успешно создан ".date("Y-m-d в H:i:s")."</h1> <p style='color: #34495e; line-height: 22px !important; margin-left: 40px; '>В снимке содержится: <b>{$total_files}</b> {$tf_text}</p>";
@@ -319,9 +349,9 @@ class AntiShell {
 				$makeFile['status'] = '4';
 				$makeFile['text'] = "<h1 style=\"font:normal 22px 'Trebuchet MS',Arial,sans-serif;color:#c0392b;padding:40px 10px 10px;text-align: center;\">{$this->config['sitename']} - Файл снимка не создан!</h1>
 					<div style='color: #34495e; line-height: 22px !important; margin-left: 40px;'>
-						Возможные причины: 
-						<br />- <b>Не хватает прав.</b> Установите на папку, содержащую снимок права на запись (CHMOD 777). 
-						<br />- <b>Неверный путь к корню сайта.</b> Откройте файл скрипта и отредактируйте настройки в ручную, либо запустите устаовку ещё раз. 
+						Возможные причины:
+						<br />- <b>Не хватает прав.</b> Установите на папку, содержащую снимок права на запись (CHMOD 777).
+						<br />- <b>Неверный путь к корню сайта.</b> Откройте файл скрипта и отредактируйте настройки в ручную, либо запустите устаовку ещё раз.
 						<br />- <b>Особенности хостинга или распределения прав пользователей.</b> Обратитесь за помошью в службу технической поддержки хостинга или на сайт <a href='http://antishell.ru/' target='_blank'>antishell.ru</a> (будьте готовы дать FTP-доступ к папке со скриптом и папке со снимком)
 					</div>";
 			}
@@ -332,6 +362,13 @@ class AntiShell {
 		}
 		if (!$this->config['makesnap'] && !$this->config['allowsnap']) {
 			@unlink($this->config['root_dir'].$this->config['scanfile'].'.tmp');
+		}
+
+		if ($this->config['send_stat']) {
+
+			$this->send_stat_data['i_change'] = $i_change;
+			$this->send_stat_data['i_add']    = $i_add;
+			$this->send_stat_data['i_del']    = $i_del;
 		}
 
 		return $makeFile;
@@ -408,8 +445,8 @@ class AntiShell {
 
 	/**
 	 * Преобразование кодировки в кодировку )))
-	 * @param string $text 
-	 * @param $charset 
+	 * @param string $text
+	 * @param $charset
 	 * @return string
 	 */
 	public function mimeEncode($text, $charset = "utf-8") {
@@ -419,7 +456,7 @@ class AntiShell {
 	/**
 	 * Функция для установки правильного окончания слов
 	 * @param int $n - число, для которого будет расчитано окончание
-	 * @param string $words - варианты окончаний для (1 комментарий, 2 комментария, 100 комментариев) 
+	 * @param string $words - варианты окончаний для (1 комментарий, 2 комментария, 100 комментариев)
 	 * @return string - слово с правильным окончанием
 	 */
 	public function wordSpan($n = 0, $words) {
@@ -446,11 +483,11 @@ class AntiShell {
 	<body style="background-color:#ecf0f1; max-width: 800px; margin: 0 auto;padding:0;">
 		<div  style="background-color:#ecf0f1;font:normal 16px 'Trebuchet MS',Arial,sans-serif;color:#7f8c8d;margin:0;padding:5px 5px 35px 5px;">
 			{$content}
-		</div>  
+		</div>
 	</body>
 </html>
 HTML;
-	
+
 		return $template;
 	}
 
@@ -462,7 +499,7 @@ HTML;
 	 */
 	public function showOutput($output, $charset) {
 		$this->showHeader($charset); // Не знаю нужно ли это тут вообще
-		echo $output;	
+		echo $output;
 	}
 
 	public function showHeader($charset = 'utf-8') {
@@ -476,8 +513,13 @@ HTML;
 	public function showStat() {
 		global $time_start;
 
-		$time   = round(microtime(true)-$time_start,5) . ' Сек.';
+		$time   = round(microtime(true)-$time_start, 5) . ' Сек.';
 		$memory = (!function_exists('memory_get_peak_usage')) ? 'неизвестно' : round(memory_get_peak_usage()/1024/1024, 2) . ' Mb';
+
+		if ($this->config['send_stat']) {
+			$this->send_stat_data['time'] = round(microtime(true)-$time_start, 8);
+		}
+
 
 		$stat = '<div style="color: #34495e; line-height: 22px !important; margin-left: 40px; margin-top: 10px; border-top: 1px solid #bdc3c7;">
 			<p>Время выполнения: '.$time.'
@@ -486,6 +528,41 @@ HTML;
 
 		return $stat;
 	}
+
+	/**
+	 * Отправка Анонимной статистики
+	 * @param  array $array массив с данными
+	 */
+	public function sendStat($array) {
+
+        if ($this->config['send_stat']) {
+            if (function_exists('curl_exec')) {
+                $curl = curl_init();
+                curl_setopt($curl, CURLOPT_TIMEOUT, 15);
+                curl_setopt($curl, CURLOPT_URL, 'http://' . $this->url . '/stat.php');
+                curl_setopt($curl, CURLOPT_POST, 1);
+                $data = "?&ichange={$array['i_change']}&iadd={$array['i_add']}&idel={$array['i_del']}&time={$array['time']}&version={$this->version}";
+                curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
+                curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+                curl_exec($curl);
+                curl_close($curl);
+            } else {
+                $fp = fsockopen($this->url, 80, $errno, $errstr, 15);
+                if ($fp) {
+                    $data = 'scanned=' . urlencode($this->statistics['scanned']) . '&change=' . urlencode($this->statistics['change']) . '&version=' . urlencode($this->version);
+                    $data = '?&ichange='. urlencode($array['i_change']).'&iadd='. urlencode($array['i_add']).'&idel='. urlencode($array['i_del']).'&time='. urlencode($array['time']).'&version='. urlencode($this->version);
+                    $headers = 'POST ' . '/stat.php' . " HTTP/1.1\r\n";
+                    $headers .= 'Host: ' . $this->url . "\r\n";
+                    $headers .= "Content-type: application/x-www-form-urlencoded\r\n";
+                    $headers .= 'Content-Length: ' . strlen($data) . "\r\n\r\n";
+                    fwrite($fp, $headers . $data);
+                    fclose($fp);
+                }
+            }
+
+        }
+    }
+
 }
 // Запуск основного метода.
 AntiShell::getInstance()->runAntiShell($config);

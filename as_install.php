@@ -70,7 +70,7 @@ if (!defined('AS_CHARSET'))	define('AS_CHARSET', 'utf-8');
 		.alert {background: #ebada7; color: #c0392b; text-shadow: none;}
 		.clearfix:before, .clearfix:after {content: ""; display: table;}
 		.clearfix:after {clear: both;}
-		.clearfix {*zoom: 1;} 
+		.clearfix {*zoom: 1;}
 	</style>
 </head>
 <body>
@@ -78,7 +78,7 @@ if (!defined('AS_CHARSET'))	define('AS_CHARSET', 'utf-8');
 		<h1 class="ta-center"><big class="red">AntiShell</big> <br><span class="blue">Мастер установки скрипта для предупреждения взлома Вашего сайта</span></h1>
 		<hr>
 	</header>
-	<section>  
+	<section>
 		<h2 class="gray ta-center">Написан специально для быстрой установки скрипта на сайт без лишних заморочек.</h2>
 		<p class="ta-center">
 			<a href="https://github.com/pafnuty/AntiShell" target="_blank" class="btn">Репозиторий на GitHub</a>
@@ -89,12 +89,12 @@ if (!defined('AS_CHARSET'))	define('AS_CHARSET', 'utf-8');
 			echo $output;
 		?>
 
-	</section> 	
+	</section>
 	<p><a href="http://antishell.ru/authors/" target="_blank">Информация об авторах скрипта</a></p>
 </body>
 </html>
 
-<?php 
+<?php
 	/**
 	 * Basic cURL wrapper function for PHP
 	 * @link http://snipplr.com/view/51161/basic-curl-wrapper-function-for-php/
@@ -121,19 +121,19 @@ if (!defined('AS_CHARSET'))	define('AS_CHARSET', 'utf-8');
 			return $response;
 		} else {
 			die('<div class="descr ta-center"><h2><span class="red">Внимание!</span> На сайте отключено расширение cURL для php</h2> <p>Включите cURL и попробуйте снова.</p></div>');
-		}	
+		}
 	}
-	
+
 	function anti_shell_installer() {
 		$docroot = $_SERVER["DOCUMENT_ROOT"];
 		$output = '';
 		// Ветка на гитхабе
-		$github = 'https://raw.github.com/pafnuty/AntiShell/master/';
+		$github = 'https://raw.githubusercontent.com/pafnuty/AntiShell/master/';
 
 		$ver = curl_get($github.'version_id.json');
 		if ($ver) {
 			$version = json_decode($ver, true);
-		} 
+		}
 
 		// Если через $_POST передаётся параметр install, производим инсталляцию, согласно параметрам
 		if(!empty($_POST['install'])) {
@@ -148,7 +148,7 @@ if (!defined('AS_CHARSET'))	define('AS_CHARSET', 'utf-8');
 			if (!$as) {
 				die('Невозможно получить доступ к установочному файлу по адресу: '.$github.'src/source.php');
 			}
-			
+
 
 			$as_config_array = array(
 					'[root_dir]',
@@ -164,7 +164,8 @@ if (!defined('AS_CHARSET'))	define('AS_CHARSET', 'utf-8');
 					'[email]',
 					'[from_email]',
 					'[icon_url]',
-					'[doc_charset]'
+					'[doc_charset]',
+					'[send_stat]'
 				);
 			$as_config_values = array(
 				$_POST['root_dir'],
@@ -180,12 +181,13 @@ if (!defined('AS_CHARSET'))	define('AS_CHARSET', 'utf-8');
 				$_POST['yourmail'],
 				($_POST['from']) ? $_POST['from'] : "",
 				$_POST['icon_url'],
-				AS_CHARSET
+				AS_CHARSET,
+				($_POST['send_stat']) ? true : 0
 				);
 			$as = str_replace($as_config_array, $as_config_values, $as);
 
 			$script_filename = $_POST['script_filename'];
-			
+
 			$as_file = fopen($docroot.$script_filename, "w");
 			fwrite($as_file, $as);
 			fclose($as_file);
@@ -193,7 +195,7 @@ if (!defined('AS_CHARSET'))	define('AS_CHARSET', 'utf-8');
 
 			$bsn = basename($script_filename);
 			$pth = str_ireplace($bsn, '', $script_filename);
-			
+
 			if (!file_exists($docroot.$script_filename)) {
 				$output .= '<div class="descr alert">';
 				$output .= '<h2 class="red">Скрипт не установлен!</h2>' ;
@@ -209,7 +211,7 @@ if (!defined('AS_CHARSET'))	define('AS_CHARSET', 'utf-8');
 					<div class="form-field form-field-large clearfix">
 					<div class="lebel">&nbsp;</div>
 						<div class="control">
-							<a href="http://{$_SERVER['HTTP_HOST']}{$script_filename}?snap=y" target="_blank" title="Будет запущена проверка системы: http://{$_SERVER['HTTP_HOST']}{$script_filename}" class="btn">Запустить проверку</a> &nbsp; <small>Адрес скрипта: http://{$_SERVER['HTTP_HOST']}{$script_filename}</small>
+							<a href="http://{$_SERVER['HTTP_HOST']}{$script_filename}?snap=y" target="_blank" title="Будет запущена проверка системы: http://{$_SERVER['HTTP_HOST']}{$script_filename}" class="btn">Запустить проверку</a>   <small>Адрес скрипта: http://{$_SERVER['HTTP_HOST']}{$script_filename}</small>
 						</div>
 					</div>
 					<hr>
@@ -241,7 +243,7 @@ if (!defined('AS_CHARSET'))	define('AS_CHARSET', 'utf-8');
 								<input type="hidden" value='/usr/bin/wget -O - -q "http://{$_SERVER['HTTP_HOST']}{$script_filename}"' name="wgetlink">
 								<input type="hidden" value="/usr/bin/php -f {$docroot}{$script_filename}" name="phplink">
 								<input type="submit" class="btn" value="Отправить данные на почту" />
-							</form> 
+							</form>
 							<small>На адрес <b class="red">{$_POST['yourmail']}</b> будет отправлена следующая информация:</small>
 							<br><small>- ссылка на файл со скриптом.</small>
 							<br><small>- команды для вставки в планировщик задач.</small>
@@ -278,7 +280,7 @@ HTML;
 			 * Отправка уведомления на email
 			 * @param string $buffer - что отправляем
 			 * @param $subject - Тема сообщения
-			 * @return type 
+			 * @return type
 			 */
 			function mailfromsite($buffer, $subject, $email, $text = "Установлен AntiShell скрипт", $from_email = 'noreply@antishell.ru')
 			{
@@ -301,8 +303,8 @@ HTML;
 			}
 			/**
 			 * Преобразование кодировки в кодировку )))
-			 * @param string $text 
-			 * @param $charset 
+			 * @param string $text
+			 * @param $charset
 			 * @return string
 			 */
 			function mime_encode($text, $charset = AS_CHARSET)
@@ -312,7 +314,7 @@ HTML;
 			$mail_text = <<<HTML
 <body style="background-color:#ecf0f1; margin: 0; padding:0;">
 	<div style="max-width: 800px; margin: 0 auto;">
-		<h1 style="font:normal 22px 'Trebuchet MS', Arial, sans-serif; color:#2980b9; padding:40px 10px 10px; text-align: center;">Поздравляем!</h1> 
+		<h1 style="font:normal 22px 'Trebuchet MS', Arial, sans-serif; color:#2980b9; padding:40px 10px 10px; text-align: center;">Поздравляем!</h1>
 		<div style="background-color:#ecf0f1; font:normal 16px 'Trebuchet MS', Arial, sans-serif; color:#7f8c8d; margin:0; padding: 0px 20px 20px 20px;">
 			<h4>Вы успешно установили AntiShell скрипт себе на сайт!</h4>
 			<p>{$_POST['scriptlink']}</p>
@@ -338,11 +340,11 @@ HTML;
 			}
 				echo "<h2 class='red'>А теперь удалите файл установщика!</h2>";
 			echo "</div>";
-			
+
 		}
 		// Если через $_POST ничего не передаётся, выводим форму для установки модуля
 		else {
-			
+
 			$site_title = 'Мой сайт';
 			$site_mail = 'noname@site.ru';
 			if (file_exists($docroot.'/engine/data/config.php')) {
@@ -354,9 +356,9 @@ HTML;
 			$output .= <<<HTML
 			<p class="ta-center">Текущая версия скрипта: <b>{$version['id']}</b> от {$version['date']}</p>
 			<div class="descr">
-				<form method="POST">            
+				<form method="POST">
 					<input type="hidden" name="install" value="1">
-					
+
 					<div class="form-field clearfix">
 						<div class="lebel">Путь к корню сайта</div>
 						<div class="control">
@@ -372,7 +374,7 @@ HTML;
 							<small class="gray"><br>По указанному адресу будет создан файл с кодом скрипта. Папка в которой будет создаваться скрипт, должна имет права на запись (CHMOD 777). Рекоендуется прятать скрипт поглубже, а ссылку не афишировать. <br>К примеру так: <code>/engine/classes/min/lib/old.php</code></small>
 						</div>
 					</div>
-				
+
 					<div class="form-field clearfix">
 						<div class="lebel">Имя сайта</div>
 						<div class="control">
@@ -395,7 +397,7 @@ HTML;
 							<input type="text" name="scanfile" value="/uploads/posts/snap.jpg">
 							<small class="red">Обязательно изменить путь, имя и расширение файла!</small> <br>
 							<small class="gray">Папка, в которой будет создаваться снимок, должна иметь CHMOD 777</small>
-						</div>						
+						</div>
 					</div>
 
 					<div class="form-field clearfix">
@@ -403,7 +405,7 @@ HTML;
 						<div class="control">
 							<input type="checkbox" value="1" name="allowsnap" id="allowsnap" checked class="checkbox"><label for="allowsnap"><span></span> Да</label> <br>
 							<small class="gray">Если отключить автосоздание снимка, то результаты сканирования не буду записаны в файл. Для создания снимка в этом случаи необходимо запускать скрипт с параметром snap=y (например: http://antishell.php?snap=y)</small>
-						</div>						
+						</div>
 					</div>
 
 					<div class="form-field clearfix">
@@ -447,12 +449,26 @@ HTML;
 					</div>
 
 					<div class="form-field clearfix">
-						<div class="lebel">Путь к иконкам-индикаторам 
-							<p><img src="https://raw.github.com/pafnuty/AntiShell/master/img/as_sprite.png" alt="Иконки по умолчанию"> &nbsp;</p>
+						<div class="lebel">Путь к иконкам-индикаторам
+							<p><img src="https://raw.github.com/pafnuty/AntiShell/master/img/as_sprite.png" alt="Иконки по умолчанию">  </p>
 						</div>
 						<div class="control">
 							<input type="text" name="icon_url" value="{$github}img/as_sprite.png">
 							<small class="gray">Иконки-индикаторы отображаются для наглядности. Вы можете сохранить картинку (она слева) с иконками себе на сайт и прописать полный URL к этой картинке.</small>
+						</div>
+					</div>
+
+					<div class="form-field clearfix">
+						<div class="lebel">Отправлять статистку</div>
+						<div class="control">
+							<input type="checkbox" value="1" name="send_stat" id="send_stat" checked class="checkbox"><label for="send_stat"><span></span> Да</label> <br>
+							<small class="gray">Разрешить отправку анонимной статистики.
+								<br>Собирается статистика о следующих параметрах сканирования:
+								<br>- кол-во отсканированных файлов;
+								<br>- кол-во изменёных файлов;
+								<br>- кол-во удалённых файлов;
+								<br>- время сканирования;
+								<br>- версия скрипта (начная с v1.1.3).</small>
 						</div>
 					</div>
 
@@ -463,8 +479,8 @@ HTML;
 							<small>Будет произведенеа автоматическая установка скрипта на сайт в соответствии с заданными параметрами.</small>
 						</div>
 					</div>
-				
-				
+
+
 				</form>
 			</div>
 HTML;
@@ -476,4 +492,4 @@ HTML;
 		return $output;
 	}
 
-?>	
+?>
