@@ -13,7 +13,7 @@
  * ICQ: 817233
  * email: pafnuty10@gmail.com
  * =============================================================================
- * Версия: [version_id] ([version_date])
+ * Версия: [version_id] от [version_date]
  * =============================================================================
  */ 
 
@@ -83,7 +83,16 @@ $config = array(
 	// - кол-во удалённых файлов
 	// - время сканирования
 	// - версия скрипта (начная с v1.1.3)
-	'send_stat' => [send_stat]
+	'send_stat' => [send_stat],
+
+	// Если разрешено - в статистике будет учитываться домен (домен не публикуется!)
+	// В будущем, по запросу будет возмжно получение статистики по своему домену.
+	'send_domain' => [send_domain],
+
+	// Логин, для которого будет собираться статистика сканирования
+	// Рекомендуется указывать, если сайтов несколько, тогда можно будет получить статистику сразу по всем своим сайтам.
+	// Допускается использование email-адреса
+	'statistics_login' => '[statistics_login]',
 );
 ///////// Конец настроек скрипта /////////
 
@@ -100,383 +109,477 @@ $config['makesnap'] = (isset($_GET['snap'])) ? true : false ;
 
 $time_start  = microtime(true);
 
-class AntiShell {
-	/**
-	 * Оф.сайт скрипта
-	 * @var string
-	 */
+namespace AntiShell;
+
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
+
+
+/**
+ * Class core
+ * @package AntiShell
+ */
+class core
+{
+
+    /**
+     * Оф.сайт скрипта
+     * @var string
+     */
     public $url = "antishell.ru";
 
     /**
      * Версия скрипта
      * @var string
      */
-    public $version = "[version_id]";
+    public $version = "1.2";
 
     /**
-     * Массив для записи статистики
+     * Массив с конфигурацией скрипта
      * @var array
      */
-    public $send_stat_data = array();
+    public $config;
+    /**
+     * Массив для записи отправляемой статистики
+     * @var array
+     */
+    public $sendStatData;
 
-	// Тут читый паттерн singleton, объяснять нечего, тупо взят из википедии)
-	protected static $instance;
-	private function __construct() {}
-	private function __clone() {}
-	private function __wakeup() {}
+    /**
+     * Засечка времени для статистики
+     * @var string
+     */
+    public $timeStart;
 
-	public static function getInstance() {
-		if (!isset(self::$instance)) {
-			$class          = __CLASS__;
-			self::$instance = new $class();
-		}
-		return self::$instance;
-	}
+    /**
+     * Полное имя файла снимка
+     * @var string
+     */
+    public $snapFile;
 
-	/**
-	 * Конфигуратор
-	 * @param array $cfg
-	 * @return array
-	 */
-	public function setConfig($cfg) {
-		$this->config = $cfg;
-	}
+    /**
+     * Учитываем чистые затраты памяти
+     * @var int|string
+     */
+    public $memoryStart;
 
-	/**
-	 * Преобразуем строку в массив
-	 * @param string $array - входящая строка
-	 * @param $delimetr - разделитель массива
-	 * @return array()
-	 */
-	public function str2array($array, $delimetr = ',') {
-		if (!$array OR $array == '*')
-			return false;
-		$earr = explode($delimetr, $array);
-		$narr = array();
-		foreach ($earr as $v) {
-			$v = trim($v);
-			if ($v)
-				$narr[] = $v;
-		}
-		return $narr;
-	}
+    /**
+     * Конструктор класса
+     */
+    function __construct()
+    {
+        $this->timeStart = $this->timer();
+        $this->memoryStart = $this->getMemory();
+    }
 
-	/**
-	 * Основной метод класса AntiShell
-	 */
-	public function runAntiShell($config) {
-		$output = '';
-		$this->setConfig($config);
+    /**
+     * Устанавливаем конфиг
+     *
+     * @param array $arConfig
+     *
+     * @return $this
+     */
+    public function setConfig($arConfig = array())
+    {
+        $this->config = $arConfig;
+        $this->sendStatData = array();
 
-		// Преобразуем нужные строки конфига в массив для дальнейшей работы.
-		$this->config['ext']      = $this->str2array($this->config['ext']);
-		$this->config['skipfile'] = $this->str2array($this->config['skipfile'].','.basename($this->config['root_dir'].$this->config['scanfile']));
-		$this->config['skipdir']  = $this->str2array($this->config['skipdir']);
+        return $this;
+    }
 
-		// Запускаем канирование
-		$scan = $this->doScan($this->config['root_dir'] . $this->config['path']);
+    /**
+     * Преобразуем строку в массив
+     *
+     * @author Sander http://sandev.pro/
+     *
+     * @param        $array - входящая строка
+     * @param string $delimiter - разделитель массива
+     *
+     * @return array|bool
+     */
 
-		// Пишем в файл
-		$makeFile = $this->makeFile($scan);
+    public function str2array($array, $delimiter = ',')
+    {
+        if (!$array OR $array == '*') {
+            return false;
+        }
+        $arOld = explode($delimiter, $array);
+        $arNew = array();
+        foreach ($arOld as $v) {
+            $v = trim($v);
+            if ($v) {
+                $arNew[] = $v;
+            }
+        }
 
-		// Определяем выводимый контент и заголовок письа
-		$status = $makeFile['status'];
-		$allowMail = false;
-		// Разные статусы сканирования
-		switch ($status) {
-			case '1':
-				$title = 'На сайте изменены файлы.';
-				$allowMail = true;
-				break;
+        return $arNew;
+    }
 
-			case '2':
-				$title = 'Файлы не менялись.';
-				$allowMail = false;
-				break;
+    /**
+     * Метод для реализации strpos с массивом
+     *
+     * @param string $haystack - Где искать
+     * @param array $needle - Что искать (массив)
+     * @param int $offset - Если этот параметр указан, то поиск будет начат с указанного количества символов с начала строки. {@see strpos()}
+     *
+     * @return bool
+     */
+    public function strposa($haystack, $needle, $offset = 0)
+    {
+        if (!is_array($needle)) {
+            $needle = array($needle);
+        }
+        foreach ($needle as $query) {
+            if (strpos($haystack, $query, $offset) !== false) {
+                return true;
+            } // stop on first true result
+        }
 
-			case '3':
-				$title = 'Файл снимка успешно создан.';
-				$allowMail = true;
-				break;
+        return false;
+    }
 
-			case '4':
-				$title = 'Ошибка при создании файла со снимком.';
-				$allowMail = true;
-				break;
-		}
+    /**
+     * Основной метод класса
+     */
+    public function run()
+    {
+        // Определяем файл снимка
+        $this->snapFile = $this->config['root_dir'] . $this->config['scanfile'];
 
-		// Определяем, что будет в контенте
-		$content = $makeFile['text'].$this->showStat();
+        // Преобразуем нужные строки конфига в массив для дальнейшей работы.
+        $this->config['ext'] = $this->str2array($this->config['ext']);
+        $this->config['skipfile'] = $this->str2array($this->config['skipfile'] . ',' . basename($this->snapFile));
+        $this->config['skipdir'] = $this->str2array($this->config['skipdir']);
 
-		if ($this->config['send_stat']) {
-			$this->sendStat($this->send_stat_data);
-		}
-		// Суём контент в шаблон для вывода
-		$output = $this->template($this->config['sitename'], $content);
+        // Запускаем канирование
+        $scan = $this->doScan($this->config['root_dir'] . $this->config['path']);
+        // Пишем в файл
+        $makeFile = $this->makeFile($scan);
 
-		// Отправляем уведомление на почту.
-		if ($allowMail) {
-			$mailArr = $this->str2array($this->config['email']);
-			$fromMailArr = $this->str2array($this->config['from_email']);
-			foreach ($mailArr as $_mail) {
-				$this->mailFromSite($output, $this->config['sitename'], $fromMailArr[0], $_mail, $title);
-			}
-		}
+        // Определяем выводимый контент и заголовок письма
+        $status = $makeFile['status'];
+        $allowMail = false;
+        $title = '';
+        // Разные статусы сканирования
+        switch ($status) {
+            case '1':
+                $title = 'На сайте изменены файлы.';
+                $allowMail = true;
+                break;
 
-		// Выводим результаты в браузер
-		if ($this->config['showtext']) {
-			$this->showOutput($output, $this->config['charset']);
-		}
-	}
+            case '2':
+                $title = 'Файлы не менялись.';
+                $allowMail = false;
+                break;
 
-	/**
-	 * Запуск сканирования
-	 * @param $dir - Путь к сканируемой папке
-	 * @param $subdir - подпапка
-	 * @return file
-	 */
-	public function doScan($dir, $subdir = '') {
-		global $scan;
-		$scandir = scandir($dir . $subdir);
-		foreach ($scandir as $f) {
-			if ($f != '.' AND $f != '..') {
-				$file = $dir . $subdir . '/' . $f;
-				if ($this->config['skipdir'] AND in_array($subdir, $this->config['skipdir']))
-					continue;
-				if (is_dir($file)) {
-					$scan = $this->doScan($dir, $subdir . '/' . $f, $scan);
-				} else {
-					$ext = pathinfo($f, PATHINFO_EXTENSION);
+            case '3':
+                $title = 'Файл снимка успешно создан.';
+                $allowMail = true;
+                break;
 
-					if ($this->config['skipfile'] AND (in_array($ext, $this->config['skipfile']) OR in_array($f, $this->config['skipfile'])))
-						continue;
-					$scan[] = $file . "|" . filectime($file) . "|" . md5($file . filesize($file));
-				}
-			}
-		}
-		return $scan;
-	}
+            case '4':
+                $title = 'Ошибка при создании файла со снимком.';
+                $allowMail = true;
+                break;
+        }
 
-	/**
-	 * Метод, создающий файл снимка
-	 * @param array $scan - массив с результатами из метода doScan
-	 * @return array - возвращает статус процесса и текст результата
-	 */
-	public function makeFile($scan) {
-		$makeFile    = array();
-		$total_files = count($scan);
-		$tf_text     = $this->wordSpan($total_files, 'фай|л|ла|лов');
+        // Определяем, что будет в контенте
+        $content = $makeFile['text'] . $this->showStat();
 
-		file_put_contents($this->config['root_dir'] . $this->config['scanfile'] . '.tmp', serialize($scan), LOCK_EX);
-		if (file_exists($this->config['root_dir'] . $this->config['scanfile'])) {
-			$oscan  = unserialize(file_get_contents($this->config['root_dir'] . $this->config['scanfile']));
-			$ioscan = implode("\n", $oscan);
-			$iscan  = implode("\n", $scan);
+        if ($this->config['send_stat']) {
+            $this->sendStat($this->sendStatData);
+        }
+        // Суём контент в шаблон для вывода
+        $output = $this->template($this->config['sitename'], $content);
 
-			$edit_diff = array_diff($scan, $oscan);
-			$edit      = array();
-			$i_change  = 0;
-			$i_add     = 0;
-			$i_del     = 0;
-			foreach ($edit_diff as $_e) {
-				$e = explode("|", $_e);
-				$_f = explode($this->config['root_dir'], $e[0]);
-				$f = array_pop($_f);
-				$d = date("Y-m-d H:i:s", $e[1]);
-				if (strpos($ioscan, $e[0]) !== false) {
-					$edit[$f] = $this->listStyler('change', $d, $f);
-					$i_change++;
-				} else {
-					$edit[$f] = $this->listStyler('add', $d, $f);
-					$i_add++;
-				}
-			}
+        // Отправляем уведомление на почту.
+        if ($allowMail) {
+            $mailArr = $this->str2array($this->config['email']);
+            $fromMailArr = $this->str2array($this->config['from_email']);
+            foreach ($mailArr as $_mail) {
+                $this->mailFromSite($output, $this->config['sitename'], $fromMailArr[0], $_mail, $title);
+            }
+        }
 
-			$del_diff = array_diff($oscan, $scan);
-			foreach ($del_diff as $_e) {
-				$e  = explode("|", $_e);
-				$_f = explode($this->config['root_dir'], $e[0]);
-				$f  = array_pop($_f);
-				$d  = date("Y-m-d H:i:s", $e[1]);
-				if (strpos($iscan, $e[0]) === false) {
-					$edit[$f] = $this->listStyler('del', $d, $f);
-					$i_del++;
-				}
-			}
-			arsort($edit);
-			unset($edit_diff, $del_diff);
-			if ($edit) {
-				$editted		= count($edit);
-				$snap_date		= date("j.m.Y в H:i:s",filemtime($this->config['root_dir'].$this->config['scanfile'].'.tmp'));
-				$logs			= implode("\n\t",$edit);
-				$i_change_text	= $this->wordSpan($i_change, 'фай|л изменён|ла изменено|лов изменено');
-				$i_add_text		= $this->wordSpan($i_add, 'фай|л добавлен|ла добавлено|лов добавлено');
-				$i_del_text		= $this->wordSpan($i_del, 'фай|л удалён|ла удалены|лов удалено');
-				$snap_info = ($this->config['makesnap'] || $this->config['allowsnap']) ? "<p>Снимок создан <b>{$snap_date}</b></p>" : "<p>Дата сканирования: <b>{$snap_date}</b></p>";
+        // Выводим результаты в браузер
+        if ($this->config['showtext']) {
+            $this->showOutput($output, $this->config['charset']);
+        }
+    }
 
-				$makeFile['status'] = '1';
-				$makeFile['text'] = "<h1 style=\"font:normal 22px 'Trebuchet MS',Arial,sans-serif;color:#2980b9;padding:40px 10px 10px;text-align: center;\">{$this->config['sitename']} - Сканирование завершено</h1>
-				<ul style='list-style:none;margin:0;padding:0;margin-bottom:15px;'>
+    /**
+     * @param string $dir - Путь к сканируемой папке
+     * @param string $subdir - подпапка
+     *
+     * @return array
+     */
+    public function doScan($dir, $subdir = '')
+    {
+        $arFilesInfo = array();
+        $scandir = $dir . $subdir;
+
+        $directory = new RecursiveDirectoryIterator($scandir, RecursiveDirectoryIterator::SKIP_DOTS);
+        $iterator = new RecursiveIteratorIterator($directory, RecursiveIteratorIterator::LEAVES_ONLY);
+
+        foreach ($iterator as $obFile) {
+
+            $fileName = $obFile->getFilename();
+            $fileSize = $obFile->getSize();
+            $pathName = $obFile->getPathname();
+            $fileExtension = $obFile->getExtension();
+
+            if (!empty($this->config['skipdir']) && $this->strposa($pathName, $this->config['skipdir'])) {
+                continue;
+            }
+            if (!empty($this->config['skipfile']) && (in_array($fileExtension, $this->config['skipfile']) || in_array($fileName, $this->config['skipfile']))) {
+                continue;
+            }
+
+            $fileCTime = $obFile->getCTime();
+            $hash = md5($pathName . $fileName . $fileSize . $fileCTime);
+            //$arFilesInfo[$hash]['hash'] = $hash;
+            $arFilesInfo[$hash]['path'] = $pathName;
+            $arFilesInfo[$hash]['date'] = $fileCTime;
+
+        }
+
+        return $arFilesInfo;
+    }
+
+    /**
+     * Метод, создающий файл снимка
+     *
+     * @param $arScan - массив с результатами из метода doScan
+     *
+     * @return array  - возвращает статус процесса и текст результата
+     */
+    public function makeFile($arScan)
+    {
+        $makeFileInfo = array();
+        $edit = array();
+        $changedCount = 0;
+        $addedCount = 0;
+        $deletedCount = 0;
+        $totalFilesCount = count($arScan);
+        $tf_text = $this->declination($totalFilesCount, 'фай|л|ла|лов');
+
+        $tmpFile = $this->snapFile . '.tmp';
+        file_put_contents($tmpFile, serialize($arScan), LOCK_EX);
+
+        if (file_exists($this->snapFile)) {
+            $strScanFile = file_get_contents($this->snapFile);
+            $arScanFile = unserialize($strScanFile);
+            $strScan = serialize($arScan);
+
+            $diff = array_diff_key($arScan, $arScanFile);
+
+            foreach ($diff as $hash => $arFile) {
+                $fPath = $arFile['path'];
+                $fDate = date("Y-m-d H:i:s", $arFile['date']);
+                if (strpos($strScanFile, $fPath) !== false) {
+                    $edit[$hash] = $this->listStyler('change', $fDate, $fPath);
+                    $changedCount++;
+                } else {
+                    $edit[$hash] = $this->listStyler('add', $fDate, $fPath);
+                    $addedCount++;
+                }
+            }
+
+            $deletedDiff = array_diff_key($arScanFile, $arScan);
+
+            foreach ($deletedDiff as $hash => $arFile) {
+                $fPath = $arFile['path'];
+                $fDate = date("Y-m-d H:i:s", $arFile['date']);
+                if (strpos($strScan, $fPath) === false) {
+                    $edit[$hash] = $this->listStyler('del', $fDate, $fPath);
+                    $deletedCount++;
+                }
+            }
+
+
+            unset($diff, $deletedDiff);
+            if ($edit) {
+                arsort($edit);
+                $snapDate = date("j.m.Y в H:i:s", filemtime($tmpFile));
+                $logs = implode("\n\t", $edit);
+                $changeText = $this->declination($changedCount, 'фай|л изменён|ла изменено|лов изменено');
+                $addText = $this->declination($addedCount, 'фай|л добавлен|ла добавлено|лов добавлено');
+                $delText = $this->declination($deletedCount, 'фай|л удалён|ла удалены|лов удалено');
+                $snapInfo = ($this->config['makesnap'] || $this->config['allowsnap']) ? "<p>Снимок создан <b>{$snapDate}</b></p>" : "<p>Дата сканирования: <b>{$snapDate}</b></p>";
+
+                $makeFileInfo['status'] = '1';
+                $makeFileInfo['text'] = "<h1 style=\"font:normal 22px 'Trebuchet MS',Arial,sans-serif;color:#2980b9;padding:40px 10px 10px;text-align: center;\">{$this->config['sitename']} - Сканирование завершено</h1>
+				<ul style='list-style:none;margin:0 0 15px 0;padding:0;'>
 					{$logs}
 				</ul>
 				<div style='color: #34495e; line-height: 22px !important; margin-left: 40px;'>
-					{$snap_info}
+					{$snapInfo}
 					<p>
-						Всего отсканировано <b>{$total_files}</b> {$tf_text}, из них:
-						<br>- <b>{$i_change}</b> {$i_change_text}
-						<br>- <b>{$i_add}</b> {$i_add_text}
-						<br>- <b>{$i_del}</b> {$i_del_text}
+						Всего отсканировано <b>{$totalFilesCount}</b> {$tf_text}, из них:
+						<br>- <b>{$changedCount}</b> {$changeText}
+						<br>- <b>{$addedCount}</b> {$addText}
+						<br>- <b>{$deletedCount}</b> {$delText}
 					</p>
 					<p>Запущено с IP: <b>{$_SERVER['REMOTE_ADDR']}</b></p>
 				</div>";
-			} else {
-				$makeFile['status'] = '2';
-				$makeFile['text'] = "<h1 style=\"font:normal 22px 'Trebuchet MS',Arial,sans-serif;color:#16a085;padding:40px 10px 10px;text-align: center;\">Файлы не менялись. Всё ок!</h1>";
-			}
-			if ($this->config['makesnap'] || $this->config['allowsnap']) {
-				@unlink($this->config['root_dir'].$this->config['scanfile']);
-			}
+            } else {
+                $makeFileInfo['status'] = '2';
+                $makeFileInfo['text'] = "<h1 style=\"font:normal 22px 'Trebuchet MS',Arial,sans-serif;color:#16a085;padding:40px 10px 10px;text-align: center;\">Файлы не менялись. Всё ок!</h1>";
+            }
+            if ($this->config['makesnap'] || $this->config['allowsnap']) {
+                @unlink($this->snapFile);
+            }
 
-		} else {
-			if ($this->config['makesnap'] || $this->config['allowsnap']) {
-				@rename($this->config['root_dir'].$this->config['scanfile'].'.tmp', $this->config['root_dir'].$this->config['scanfile']);
-			}
+        } else {
+            if ($this->config['makesnap'] || $this->config['allowsnap']) {
+                @rename($tmpFile, $this->snapFile);
+            }
 
-			if (file_exists($this->config['root_dir'].$this->config['scanfile'])) {
-				$makeFile['status'] = '3';
-				$makeFile['text'] = "<h1 style=\"font:normal 22px 'Trebuchet MS',Arial,sans-serif;color:#16a085;padding:40px 10px 10px;text-align: center;\">{$this->config['sitename']} - Файл снимка успешно создан ".date("Y-m-d в H:i:s")."</h1> <p style='color: #34495e; line-height: 22px !important; margin-left: 40px; '>В снимке содержится: <b>{$total_files}</b> {$tf_text}</p>";
-			} else {
-				$makeFile['status'] = '4';
-				$makeFile['text'] = "<h1 style=\"font:normal 22px 'Trebuchet MS',Arial,sans-serif;color:#c0392b;padding:40px 10px 10px;text-align: center;\">{$this->config['sitename']} - Файл снимка не создан!</h1>
+            if (file_exists($this->snapFile)) {
+                $makeFileInfo['status'] = '3';
+                $makeFileInfo['text'] = "<h1 style=\"font:normal 22px 'Trebuchet MS',Arial,sans-serif;color:#16a085;padding:40px 10px 10px;text-align: center;\">{$this->config['sitename']} - Файл снимка успешно создан " . date("Y-m-d в H:i:s") . "</h1> <p style='color: #34495e; line-height: 22px !important; margin-left: 40px; '>В снимке содержится: <b>{$totalFilesCount}</b> {$tf_text}</p>";
+            } else {
+                $makeFileInfo['status'] = '4';
+                $makeFileInfo['text'] = "<h1 style=\"font:normal 22px 'Trebuchet MS',Arial,sans-serif;color:#c0392b;padding:40px 10px 10px;text-align: center;\">{$this->config['sitename']} - Файл снимка не создан!</h1>
 					<div style='color: #34495e; line-height: 22px !important; margin-left: 40px;'>
 						Возможные причины:
-						<br />- <b>Не хватает прав.</b> Установите на папку, содержащую снимок права на запись (CHMOD 777).
+						<br />- <b>Не хватает прав.</b> Установите на папку, содержащую снимок права на запись (CHMOD 755 или 777).
 						<br />- <b>Неверный путь к корню сайта.</b> Откройте файл скрипта и отредактируйте настройки в ручную, либо запустите устаовку ещё раз.
 						<br />- <b>Особенности хостинга или распределения прав пользователей.</b> Обратитесь за помошью в службу технической поддержки хостинга или на сайт <a href='http://antishell.ru/' target='_blank'>antishell.ru</a> (будьте готовы дать FTP-доступ к папке со скриптом и папке со снимком)
 					</div>";
-			}
-		}
+            }
+        }
 
-		if ($this->config['makesnap'] || $this->config['allowsnap']) {
-			@rename($this->config['root_dir'].$this->config['scanfile'].'.tmp', $this->config['root_dir'].$this->config['scanfile']);
-		}
-		if (!$this->config['makesnap'] && !$this->config['allowsnap']) {
-			@unlink($this->config['root_dir'].$this->config['scanfile'].'.tmp');
-		}
+        if ($this->config['makesnap'] || $this->config['allowsnap']) {
+            @rename($tmpFile, $this->snapFile);
+        }
+        if (!$this->config['makesnap'] && !$this->config['allowsnap']) {
+            @unlink($tmpFile);
+        }
 
-		if ($this->config['send_stat']) {
+        if ($this->config['send_stat']) {
+            /** @var int */
+            $this->sendStatData['i_change'] = $changedCount;
+            /** @var int */
+            $this->sendStatData['i_add'] = $addedCount;
+            /** @var int */
+            $this->sendStatData['i_del'] = $deletedCount;
+        }
 
-			$this->send_stat_data['i_change'] = $i_change;
-			$this->send_stat_data['i_add']    = $i_add;
-			$this->send_stat_data['i_del']    = $i_del;
-		}
+        return $makeFileInfo;
+    }
 
-		return $makeFile;
-	}
 
-	/**
-	 * Назначение стилей спискам.
-	 * @param $class - название класса строки
-	 * @param $time - время
-	 * @param $file - адрес файла
-	 * @return string
-	 */
-	public function listStyler($class = 'change', $time, $file) {
-		$icon_url = $this->config['icon_url'];
-		$color = '#7f8c8d';
-		$li_title = '';
+    /**
+     * @param string $class - название CSS-класса
+     * @param string $time - время
+     * @param string $file - адрес файла
+     *
+     * @return string
+     */
+    public function listStyler($class = 'change', $time, $file)
+    {
+        $icon_url = $this->config['icon_url'];
+        $liInfo = $this->liInfo('#7f8c8d');
 
-		switch ($class) {
-			case 'add':
-				$bgPosition = 'no-repeat 10px 5px';
-				$color = '#16a085';
-				$li_title = 'Добавлен файл';
-				break;
+        switch ($class) {
+            case 'add':
+                $liInfo = $this->liInfo('#16a085', 'Добавлен файл', 'no-repeat 10px 3px');
+                break;
 
-			case 'del':
-				$bgPosition = 'no-repeat 10px -51px';
-				$color = '#7f8c8d';
-				$li_title = 'Удален файл';
-				break;
+            case 'del':
+                $liInfo = $this->liInfo('#7f8c8d', 'Удален файл', 'no-repeat 10px -53px');
+                break;
 
-			case 'change':
-				$bgPosition = 'no-repeat 10px -23px';
-				$color = '#c0392b';
-				$li_title = 'Изменен файл';
-				break;
-		}
+            case 'change':
+                $liInfo = $this->liInfo('#c0392b', 'Изменен файл', 'no-repeat 10px -25px');
+                break;
+        }
 
-		$def_style = "display:block;height:24px;line-height:24px;font-family:Arial,sans-serif;padding:2px 10px 2px 40px;margin:0 0 0 0 ;border-bottom:1px solid #bdc3c7;font-size:14px;color:#7f8c8d; background: url({$icon_url}) {$bgPosition}";
+        $def_style = 'display:block;line-height:24px;font-family:Arial,sans-serif;padding:2px 10px;margin:0;border-bottom:1px solid #bdc3c7;font-size:14px;color:#7f8c8d;';
 
-		$span_style = "display:block; float:left; padding-right:10px; margin-right:10px; border-right: 1px solid #bdc3c7; font-size: 12px;";
+        $span_style = 'display:block;height:24px;float:left;padding-right:10px;padding-left:40px;margin-right:10px;border-right:1px solid #bdc3c7;font-size:12px;background: url(' . $icon_url . ') ' . $liInfo['bgPosition'] . ';';
 
-		$li = "<li style='{$def_style}' title='{$li_title}'><span style='{$span_style}'>{$time}</span> <span style='color:{$color}'>{$file}</span></li>";
+        $li = '<li style="' . $def_style . '" title="' . $liInfo['liTooltip'] . '"><span style="' . $span_style . '">' . $time . '</span> <span style="color:' . $liInfo['color'] . ';overflow:hidden;display:block;word-wrap:break-word;">' . $file . '</span></li>';
 
-		return $li;
-	}
+        return $li;
+    }
 
-	/**
-	 * Отправка email
-	 * @param $content - контент сообщения
-	 * @param $subject - имя отправителя (берётся из имени сайта)
-	 * @param $from_email - email отправителя
-	 * @param $email - email получателя
-	 * @param $title - тема сообщения
-	 * @return отправленное мыло
-	 */
-	public function mailFromSite($content, $subject, $from_email, $email, $title = "На сайте изменены файлы") {
-		$set_mail = (trim($from_email) !='') ? $from_email : $email;
+    /**
+     * @param string $content - контент сообщения
+     * @param string $subject - имя отправителя (берётся из имени сайта)
+     * @param string $from_email - email отправителя
+     * @param string $email - email получателя
+     * @param string $title - тема сообщения
+     *
+     * @return bool
+     */
+    public function mailFromSite($content, $subject, $from_email, $email, $title = "На сайте изменены файлы")
+    {
+        $set_mail = (trim($from_email) != '') ? $from_email : $email;
 
-		if (trim($subject) != '')
-			$from = $this->mimeEncode($subject, $this->config['charset']) . " <" . $set_mail . ">";
-		else
-			$from = "<" . $set_mail . ">";
+        if (trim($subject) != '') {
+            $from = $this->mimeEncode($subject, $this->config['charset']) . " <" . $set_mail . ">";
+        } else {
+            $from = "<" . $set_mail . ">";
+        }
 
-		$content  = str_replace("\r", "", $content);
-		$headers = "From: " . $from . "\r\n";
-		$headers .= "X-Mailer: ANTI-SHELL\r\n";
-		$headers .= "Content-Type: text/html; charset=".$this->config['charset']."\r\n";
-		$headers .= "Content-Transfer-Encoding: 8bit\r\n";
-		$headers .= "X-Priority: 1 (Highest)";
+        $content = str_replace("\r", "", $content);
+        $headers = "From: " . $from . "\r\n";
+        $headers .= "X-Mailer: ANTI-SHELL\r\n";
+        $headers .= "Content-Type: text/html; charset=" . $this->config['charset'] . "\r\n";
+        $headers .= "Content-Transfer-Encoding: 8bit\r\n";
+        $headers .= "X-Priority: 1 (Highest)";
 
-		$mail_send = mail($email, $this->mimeEncode($title, $this->config['charset']), $content, $headers);
-		return $mail_send;
-	}
+        $mail_send = mail($email, $this->mimeEncode($title, $this->config['charset']), $content, $headers);
 
-	/**
-	 * Преобразование кодировки в кодировку )))
-	 * @param string $text
-	 * @param $charset
-	 * @return string
-	 */
-	public function mimeEncode($text, $charset = "utf-8") {
-		return "=?" . $charset . "?B?" . base64_encode($text) . "?=";
-	}
+        return $mail_send;
+    }
 
-	/**
-	 * Функция для установки правильного окончания слов
-	 * @param int $n - число, для которого будет расчитано окончание
-	 * @param string $words - варианты окончаний для (1 комментарий, 2 комментария, 100 комментариев)
-	 * @return string - слово с правильным окончанием
-	 */
-	public function wordSpan($n = 0, $words) {
-		$words	= explode('|', $words);
-		$n		= intval($n);
-		return  $n%10==1&&$n%100!=11?$words[0].$words[1]:($n%10>=2&&$n%10<=4&&($n%100<10||$n%100>=20)?$words[0].$words[2]:$words[0].$words[3]);
-	}
+    /**
+     * Преобразование кодировки в кодировку )))
+     *
+     * @param string $text
+     * @param        $charset
+     *
+     * @return string
+     */
+    public function mimeEncode($text, $charset = "utf-8")
+    {
+        return "=?" . $charset . "?B?" . base64_encode($text) . "?=";
+    }
 
-	/**
-	 * Шаблон для вывода в браузер и отправку уведомления на email
-	 * @param string $title - заголовок окна браузера
-	 * @param string $content - выводимый контент
-	 * @return html
-	 */
-	public function template($title = '', $content = '') {
-		$template = <<<HTML
+    /**
+     * Функция для установки правильного окончания слов
+     *
+     * @param int $n - число, для которого будет расчитано окончание
+     * @param string $words - варианты окончаний для (1 комментарий, 2 комментария, 100 комментариев)
+     *
+     * @return string - слово с правильным окончанием
+     */
+    public function declination($n = 0, $words)
+    {
+        $words = explode('|', $words);
+        $n = intval($n);
+
+        return $n % 10 == 1 && $n % 100 != 11 ? $words[0] . $words[1] : ($n % 10 >= 2 && $n % 10 <= 4 && ($n % 100 < 10 || $n % 100 >= 20) ? $words[0] . $words[2] : $words[0] . $words[3]);
+    }
+
+    /**
+     * Шаблон для вывода в браузер и отправку уведомления на email
+     *
+     * @param string $title - заголовок окна браузера
+     * @param string $content - выводимый контент
+     *
+     * @return string
+     */
+    public function template($title = '', $content = '')
+    {
+        $template = <<<HTML
 <!DOCTYPE html>
 <html>
 	<head>
-		<meta charset={$this->config['charset']}" />
+		<meta charset="{$this->config['charset']}" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 		<title>{$title}</title>
 	</head>
@@ -488,60 +591,103 @@ class AntiShell {
 </html>
 HTML;
 
-		return $template;
-	}
-
-	/**
-	 * Выводим информацию в браузер
-	 * @param string $output - что выводим
-	 * @param string $charset - кодировка, отдаваемая браузеру
-	 * @return html
-	 */
-	public function showOutput($output, $charset) {
-		$this->showHeader($charset); // Не знаю нужно ли это тут вообще
-		echo $output;
-	}
-
-	public function showHeader($charset = 'utf-8') {
-		header('Content-type: text/html; charset='.$charset);
-	}
-
-	/**
-	 * Показываем статистику
-	 * @return stat
-	 */
-	public function showStat() {
-		global $time_start;
-
-		$time   = round(microtime(true)-$time_start, 5) . ' Сек.';
-		$memory = (!function_exists('memory_get_peak_usage')) ? 'неизвестно' : round(memory_get_peak_usage()/1024/1024, 2) . ' Mb';
-
-		if ($this->config['send_stat']) {
-			$this->send_stat_data['time'] = round(microtime(true)-$time_start, 8);
-		}
+        return $template;
+    }
 
 
-		$stat = '<div style="color: #34495e; line-height: 22px !important; margin-left: 40px; margin-top: 10px; border-top: 1px solid #bdc3c7;">
-			<p>Время выполнения: '.$time.'
-			<br />Затраты памяти <small>(максимальное потребление)</small>: '.$memory.'</p>
+    /**
+     * @param $output - что выводим
+     * @param $charset - кодировка, отдаваемая браузеру
+     */
+    public function showOutput($output, $charset)
+    {
+        $this->showHeader($charset);
+        echo $output;
+    }
+
+    /**
+     * @param string $charset
+     */
+    public function showHeader($charset = 'utf-8')
+    {
+        header('Content-type: text/html; charset=' . $charset);
+    }
+
+    /**
+     * Подсчитываем время выполнения скрипта
+     *
+     * @param bool|string $stop
+     *
+     * @return float|mixed
+     */
+    public function timer($stop = false)
+    {
+
+        return ($stop) ? (microtime(true) - $stop) : microtime(true);
+    }
+
+    /**
+     * Подсчитываем затраты памяти
+     *
+     * @param bool|string $stop
+     *
+     * @return int|string
+     */
+    public function getMemory($stop = false)
+    {
+        if (function_exists('memory_get_usage')) {
+            return ($stop) ? (memory_get_usage() - $stop) : memory_get_usage();
+        }
+
+        return 0;
+    }
+
+    /**
+     * Показываем статистику
+     * @return string
+     */
+    public function showStat()
+    {
+        $timerStart = $this->timeStart;
+        $time = round($this->timer($timerStart), 5);
+        $memory = (!function_exists('memory_get_peak_usage')) ? 'неизвестно' : round(memory_get_peak_usage() / 1024 / 1024, 2) . ' Mb';
+        $realMemory = round($this->getMemory($this->memoryStart) / 1024 / 1024, 3) . ' Mb';
+        $showSendStatInfo = '';
+        if ($this->config['send_stat']) {
+            $this->sendStatData['time'] = $time;
+            $showSendStatInfo = '<p>Статистика отправлена и доступна на <a href="http://' . $this->url . '/statistics/" target="_blank">странице статистики</a>.</p>';
+        }
+
+
+        $stat = '<div style="color: #34495e; line-height: 22px !important; margin-left: 40px; margin-top: 10px; border-top: 1px solid #bdc3c7;">
+			<p>Время выполнения: ' . $time . ' Сек.
+			<br />Затраты памяти <small>(максимальное потребление)</small>: ' . $memory . '
+			<br />Затраты памяти <small>(реальное потребление)</small>: ' . $realMemory . '</p>
+			' . $showSendStatInfo . '
 		</div>';
 
-		return $stat;
-	}
+        return $stat;
+    }
 
-	/**
-	 * Отправка Анонимной статистики
-	 * @param  array $array массив с данными
-	 */
-	public function sendStat($array) {
+    /**
+     * Отправка Анонимной статистики
+     *
+     * @param  array $array массив с данными
+     */
+    public function sendStat($array)
+    {
 
         if ($this->config['send_stat']) {
+
+            $domain = ($this->config['send_domain']) ? $_SERVER['HTTP_HOST'] : '';
+            $user = ($this->config['statistics_login'] != '') ? $this->config['statistics_login'] : '';
+
             if (function_exists('curl_exec')) {
                 $curl = curl_init();
                 curl_setopt($curl, CURLOPT_TIMEOUT, 15);
                 curl_setopt($curl, CURLOPT_URL, 'http://' . $this->url . '/stat.php');
                 curl_setopt($curl, CURLOPT_POST, 1);
-                $data = "?&ichange={$array['i_change']}&iadd={$array['i_add']}&idel={$array['i_del']}&time={$array['time']}&version={$this->version}";
+                $data = "?&ichange={$array['i_change']}&iadd={$array['i_add']}&idel={$array['i_del']}&time={$array['time']}&version={$this->version}&domain={$domain}&user={$user}";
                 curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
                 curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
                 curl_exec($curl);
@@ -549,8 +695,7 @@ HTML;
             } else {
                 $fp = fsockopen($this->url, 80, $errno, $errstr, 15);
                 if ($fp) {
-                    $data = 'scanned=' . urlencode($this->statistics['scanned']) . '&change=' . urlencode($this->statistics['change']) . '&version=' . urlencode($this->version);
-                    $data = '?&ichange='. urlencode($array['i_change']).'&iadd='. urlencode($array['i_add']).'&idel='. urlencode($array['i_del']).'&time='. urlencode($array['time']).'&version='. urlencode($this->version);
+                    $data = '?&ichange=' . urlencode($array['i_change']) . '&iadd=' . urlencode($array['i_add']) . '&idel=' . urlencode($array['i_del']) . '&time=' . urlencode($array['time']) . '&version=' . urlencode($this->version) . '&domain=' . urlencode($domain) . '&user=' . urlencode($user);
                     $headers = 'POST ' . '/stat.php' . " HTTP/1.1\r\n";
                     $headers .= 'Host: ' . $this->url . "\r\n";
                     $headers .= "Content-type: application/x-www-form-urlencoded\r\n";
@@ -563,7 +708,36 @@ HTML;
         }
     }
 
+
+    /**
+     * @return array
+     */
+    public function getConfig()
+    {
+        return $this->config;
+    }
+
+    /**
+     * @return array
+     */
+    public function getSendStatData()
+    {
+        return $this->sendStatData;
+    }
+
+    /**
+     * @param string $color
+     * @param string $liTooltip
+     * @param string $bgPosition
+     *
+     * @return array
+     */
+    private function liInfo($color = '', $liTooltip = '', $bgPosition = '')
+    {
+        return array('color' => $color, 'liTooltip' => $liTooltip, 'bgPosition' => $bgPosition);
+    }
+
 }
-// Запуск основного метода.
-AntiShell::getInstance()->runAntiShell($config);
-?>
+
+$antishell = new AntiShell\core();
+$antishell->setConfig($config)->run();
