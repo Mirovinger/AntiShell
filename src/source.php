@@ -454,6 +454,8 @@ class core
 
         if ($this->config['send_stat']) {
             /** @var int */
+            $this->sendStatData['i_checked'] = $totalFilesCount;
+            /** @var int */
             $this->sendStatData['i_change'] = $changedCount;
             /** @var int */
             $this->sendStatData['i_add'] = $addedCount;
@@ -682,7 +684,7 @@ HTML;
                 curl_setopt($curl, CURLOPT_TIMEOUT, 15);
                 curl_setopt($curl, CURLOPT_URL, 'http://' . $this->url . '/stat.php');
                 curl_setopt($curl, CURLOPT_POST, 1);
-                $data = "?&ichange={$array['i_change']}&iadd={$array['i_add']}&idel={$array['i_del']}&time={$array['time']}&version={$this->version}&domain={$domain}&user={$user}";
+                $data = "?&ichecked={$array['i_checked']}&ichange={$array['i_change']}&iadd={$array['i_add']}&idel={$array['i_del']}&time={$array['time']}&version={$this->version}&domain={$domain}&user={$user}";
                 curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
                 curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
                 curl_exec($curl);
@@ -690,7 +692,7 @@ HTML;
             } else {
                 $fp = fsockopen($this->url, 80, $errno, $errstr, 15);
                 if ($fp) {
-                    $data = '?&ichange=' . urlencode($array['i_change']) . '&iadd=' . urlencode($array['i_add']) . '&idel=' . urlencode($array['i_del']) . '&time=' . urlencode($array['time']) . '&version=' . urlencode($this->version) . '&domain=' . urlencode($domain) . '&user=' . urlencode($user);
+                    $data = '?&ichecked=' . urlencode($array['i_checked']) . '&ichange=' . urlencode($array['i_change']) . '&iadd=' . urlencode($array['i_add']) . '&idel=' . urlencode($array['i_del']) . '&time=' . urlencode($array['time']) . '&version=' . urlencode($this->version) . '&domain=' . urlencode($domain) . '&user=' . urlencode($user);
                     $headers = 'POST ' . '/stat.php' . " HTTP/1.1\r\n";
                     $headers .= 'Host: ' . $this->url . "\r\n";
                     $headers .= "Content-type: application/x-www-form-urlencoded\r\n";
