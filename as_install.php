@@ -137,6 +137,7 @@ function getFolderChmod($path = '') {
 	return substr(sprintf('%o', fileperms($path)), -4);
 }
 
+
 /**
  * @return string
  */
@@ -145,7 +146,7 @@ function antiShellInstaller() {
 	$output = '';
 	// Ветка на гитхабе
 	/** @var string $github */
-	$branch = (!isset($_REQUEST['branch'])) ? $_REQUEST['branch'] : 'master';
+	$branch = (isset($_REQUEST['branch'])) ? $_REQUEST['branch'] : 'master';
 	$github = 'https://raw.githubusercontent.com/pafnuty/AntiShell/' . $branch . '/';
 
 	$ver = curlGet($github . 'version_id.json');
@@ -403,7 +404,7 @@ HTML;
 		}
 
 		$output .= <<<HTML
-			<p class="ta-center">Текущая версия скрипта: <b>{$version['id']}</b> от {$version['date']}</p>
+			<p class="ta-center">Выбранная версия скрипта: <b>{$version['id']}</b> от {$version['date']}</p>
 			<div class="descr">
 				<form method="POST">
 					<input type="hidden" name="install" value="1">

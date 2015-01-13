@@ -16,7 +16,10 @@
  * Версия: [version_id] от [version_date]
  * =============================================================================
  */ 
+namespace AntiShell;
 
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
 /////////// Настройки скрипта ///////////
 $config = array(
 	// Вкл/выкл
@@ -106,14 +109,6 @@ $config = array(
 if(!$config['on']) die("Wat?");
 
 $config['makesnap'] = (isset($_GET['snap'])) ? true : false ;
-
-$time_start  = microtime(true);
-
-namespace AntiShell;
-
-use RecursiveDirectoryIterator;
-use RecursiveIteratorIterator;
-
 
 /**
  * Class core
@@ -739,5 +734,5 @@ HTML;
 
 }
 
-$antishell = new AntiShell\core();
+$antishell = new core();
 $antishell->setConfig($config)->run();
