@@ -285,7 +285,7 @@ class core
             $this->sendStat($this->sendStatData);
         }
         // Суём контент в шаблон для вывода
-        $output = $this->template($this->config['sitename'], $content);
+        $output = $this->template($this->config['sitename'], str_replace($this->config['root_dir'], '', $content));
 
         // Отправляем уведомление на почту.
         if ($allowMail) {
