@@ -215,16 +215,11 @@ function antiShellInstaller() {
 		$fileName = basename($docroot . $script_filename);
 		$dirPath = str_ireplace($fileName, '', $docroot . $script_filename);
 
-		$originalPerm = getFolderChmod($dirPath);
-		chmod($dirPath, 0777);
-
 		$as_file = fopen($docroot . $script_filename, "w");
 		fwrite($as_file, $as);
 		fclose($as_file);
 
 		chmod($docroot . $script_filename, 0755);
-		chmod($dirPath, $originalPerm);
-
 		$bsn = basename($script_filename);
 		$pth = str_ireplace($bsn, '', $script_filename);
 
